@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <title>緊急連絡先リスト</title>
+    <style>
+        :root {
+            --primary: #3d6b8e;
+            --primary-light: #e8f0f7;
+            --accent: #d95f3b;
+            --accent-light: #fdf0ec;
+            --bg: #f5f3ef;
+            --card: #ffffff;
+            --text: #1e2d3a;
+            --text-sub: #7a8e9a;
+            --sub: #9aa8b2;
+            --border: #e2ddd8;
+            --success: #4a9e7f;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 210px;
+        }
+
+        .header {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.3px; color: var(--text); }
+        .app-title span { color: var(--primary); }
+        .header-actions { display: flex; gap: 6px; }
+
+        .icon-btn {
+            display: flex; align-items: center; gap: 4px;
+            padding: 5px 10px; border: 1.5px solid var(--border);
+            border-radius: 8px; background: white; color: var(--text-sub);
+            font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .icon-btn.accent { border-color: var(--accent); color: var(--accent); }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 12px 14px 0; }
+
+        .cat-section { margin-bottom: 6px; }
+
+        .cat-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 12px; background: var(--card);
+            border: 1.5px solid var(--border); border-radius: var(--radius);
+            margin-bottom: 4px; cursor: pointer; user-select: none;
+        }
+
+        .cat-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; letter-spacing: 0.3px; }
+        .badge-em { background: #ffd6d6; color: #c0392b; }
+        .badge-0  { background: #fdefd0; color: #b8780a; }
+        .badge-1  { background: #fde0db; color: #c04b2f; }
+        .badge-2  { background: #d4ebf2; color: #2a7a96; }
+        .badge-3  { background: #e2d4f2; color: #6b3a9a; }
+        .badge-4  { background: #e0e0e0; color: #555; }
+
+        .cat-label { font-size: 0.88rem; font-weight: 700; flex: 1; }
+        .cat-count { font-size: 0.72rem; color: var(--text-sub); font-weight: 600; }
+        .cat-arrow { font-size: 0.65rem; color: var(--text-sub); transition: transform 0.25s; }
+        .cat-section.open .cat-arrow { transform: rotate(180deg); }
+        .cat-items { display: none; }
+        .cat-section.open .cat-items { display: block; }
+
+        .item-card {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 10px 10px 12px;
+            margin-bottom: 3px; transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .item-card:active { background: #f0f0f0; }
+
+        .contact-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--primary-light); border: 2px solid var(--primary);
+            flex-shrink: 0; display: flex; align-items: center;
+            justify-content: center; font-size: 1.1rem; font-weight: 800; color: var(--primary);
+        }
+
+        .item-body { flex: 1; min-width: 0; }
+        .item-name  { font-size: 0.9rem; font-weight: 700; line-height: 1.3; }
+        .item-role  { font-size: 0.7rem; color: var(--text-sub); margin-top: 1px; font-weight: 600; }
+        .item-phone { font-size: 0.8rem; color: var(--primary); font-weight: 700; margin-top: 3px; letter-spacing: 0.3px; }
+        .item-note  { font-size: 0.68rem; color: var(--text-sub); margin-top: 2px; line-height: 1.4; }
+
+        .item-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+
+        .call-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--success); border: none; cursor: pointer;
+            font-size: 1rem; text-decoration: none; transition: opacity 0.15s;
+        }
+        .call-btn:active { opacity: 0.7; }
+
+        .delete-btn {
+            background: none; border: none; color: #ccc;
+            font-size: 1.1rem; padding: 2px 4px; cursor: pointer; line-height: 1; text-align: center;
+        }
+        .delete-btn:hover { color: var(--accent); }
+
+        .empty-cat { text-align: center; padding: 14px; font-size: 0.75rem; color: var(--text-sub); font-weight: 600; }
+
+        .save-notice {
+            display: flex; align-items: flex-start; gap: 8px;
+            background: var(--primary-light); border: 1px solid var(--primary);
+            border-radius: 10px; padding: 9px 12px; margin-bottom: 10px;
+            font-size: 0.65rem; color: var(--primary); line-height: 1.6;
+        }
+        .save-notice .notice-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+        .bottom-panel {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; border-top: 1px solid var(--border);
+            padding: 10px 14px 16px;
+        }
+        .panel-inner { max-width: 960px; margin: 0 auto; }
+
+        .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+        .add-row  { display: flex; gap: 5px; }
+
+        .cat-select {
+            width: 76px; padding: 8px 4px; border: 1.5px solid var(--border);
+            border-radius: 9px; font-size: 0.78rem; font-weight: 700;
+            color: var(--text); background: white; flex-shrink: 0; text-align: center;
+            font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+        }
+
+        .add-input {
+            flex: 1; padding: 8px 10px; border: 1.5px solid var(--border);
+            border-radius: 9px; font-size: 0.83rem; color: var(--text);
+            background: white; min-width: 0;
+            font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+        }
+        .add-input:focus, .cat-select:focus { outline: none; border-color: var(--primary); }
+
+        .add-submit {
+            padding: 8px 14px; background: var(--primary); color: white;
+            border: none; border-radius: 9px; font-size: 0.85rem; font-weight: 800;
+            cursor: pointer; flex-shrink: 0;
+            font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+        }
+
+        .action-row {
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px; margin-bottom: 8px;
+        }
+
+        .action-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            padding: 7px 4px; border-radius: 10px; border: 1.5px solid var(--border);
+            background: white; cursor: pointer; font-size: 0.62rem; font-weight: 700;
+            color: var(--text-sub); font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+        }
+        .action-btn .icon { font-size: 1.1rem; line-height: 1; }
+        .action-btn.hi     { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .action-btn.danger { border-color: var(--accent);  color: var(--accent);  background: var(--accent-light); }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.35); z-index: 200;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: white; border-radius: 16px; padding: 20px;
+            width: calc(100% - 32px); max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .modal h3 { font-size: 0.95rem; font-weight: 800; margin-bottom: 14px; color: var(--text); }
+
+        .modal-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+        .modal-field label { font-size: 0.7rem; font-weight: 700; color: var(--text-sub); }
+        .modal-field input, .modal-field select, .modal-field textarea {
+            padding: 8px 10px; border: 1.5px solid var(--border);
+            border-radius: 9px; font-size: 0.85rem; color: var(--text);
+            font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+        }
+        .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+            outline: none; border-color: var(--primary);
+        }
+        .modal-field textarea { resize: none; height: 56px; }
+
+        .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+        .modal-btns button {
+            flex: 1; padding: 10px; border-radius: 10px;
+            font-size: 0.85rem; font-weight: 800; cursor: pointer; border: none;
+            font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+        }
+        .btn-cancel { background: var(--bg); color: var(--text-sub); border: 1.5px solid var(--border) !important; }
+        .btn-save   { background: var(--primary); color: white; }
+
+        .disclaimer {
+            background: #fffbe6;
+            border-bottom: 1px solid #f0c040;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #7a5f00;
+        }
+
+        .site-footer {
+            text-align: center;
+            padding: 20px 16px 32px;
+            font-size: 0.65rem;
+            color: var(--sub);
+            opacity: 0.7;
+            letter-spacing: 0.8px;
+        }
+
+        .summary-bar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+        }
+        .summary-bar-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            display: flex;
+            gap: 16px;
+        }
+        .summary-bar-inner span b { color: var(--primary); }
+
+        .view-table { display: block; }
+        .view-cards { display: none; }
+        @media (max-width: 650px) {
+            .view-table { display: none !important; }
+            .view-cards { display: block !important; }
+        }
+
+        .contacts-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: var(--radius); overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 6px; }
+        .contacts-table thead th { background: #f0ece7; padding: 9px 12px; font-size: 0.75rem; font-weight: 800; color: var(--text-sub); text-align: left; border-bottom: 1.5px solid var(--border); white-space: nowrap; }
+        .contacts-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+        .contacts-table tbody tr:last-child { border-bottom: none; }
+        .contacts-table tbody tr:hover { background: #f8f8f6; }
+        .contacts-table tbody td { padding: 9px 12px; font-size: 0.85rem; vertical-align: middle; }
+        .contacts-table .cat-row td { background: #f0ece7; font-size: 0.75rem; font-weight: 800; color: var(--text-sub); padding: 6px 12px; }
+        .contacts-table .name-cell { font-weight: 700; }
+        .contacts-table .phone-cell { color: var(--primary); font-weight: 700; font-size: 0.8rem; white-space: nowrap; }
+        .contacts-table .role-cell { color: var(--text-sub); font-size: 0.75rem; white-space: nowrap; }
+        .contacts-table .note-cell { color: var(--text-sub); font-size: 0.75rem; }
+
+        @media print {
+            .header, .bottom-panel, .modal-overlay { display: none !important; }
+            body { padding-bottom: 0; }
+            .container { padding-top: 16px; }
+            .cat-items { display: block !important; }
+            .item-actions { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="disclaimer">⚠️ 本リストの内容は定期的にご確認ください。電話番号の変更・廃止により繋がらない場合があります。</div>
+
+<div class="header">
+    <div class="header-top">
+        <div class="app-title">📞 <span>緊急</span>連絡先リスト</div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="exportData()">📤 バックアップ</button>
+            <button class="icon-btn accent" onclick="document.getElementById('import-file').click()">📥 復元</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        </div>
+    </div>
+</div>
+
+<div class="summary-bar">
+    <div class="summary-bar-inner" id="summary-bar-inner">
+        <span>合計 <b id="total-count">0</b> 件</span>
+    </div>
+</div>
+
+<div class="container">
+    <div class="save-notice">
+        <span class="notice-icon">💾</span>
+        <span>入力内容は<strong>自動保存</strong>されます（このブラウザ・端末のみ）。<br>別の端末に引き継ぐには「バックアップ」からJSONファイルを保存してください。</span>
+    </div>
+    <div id="list-container">
+        <div id="view-table" class="view-table"></div>
+        <div id="view-cards" class="view-cards"></div>
+    </div>
+</div>
+
+<footer class="site-footer">© 2026 enu(エヌ) All rights reserved.</footer>
+
+<div class="bottom-panel">
+    <div class="panel-inner">
+        <div class="add-grid">
+            <input class="add-input" type="text" id="new-name"  placeholder="👤 名前（例：田中 太郎）">
+            <input class="add-input" type="tel"  id="new-phone" placeholder="📞 電話番号">
+        </div>
+        <div class="add-row" style="margin-bottom:8px;">
+            <select class="cat-select" id="new-cat">
+                <option value="家族・親族">家族</option>
+                <option value="職場・学校">職場</option>
+                <option value="医療・救急">医療</option>
+                <option value="行政・その他">行政</option>
+                <option value="その他">その他</option>
+            </select>
+            <input class="add-input" type="text" id="new-role" placeholder="続柄・役職（例：母、上司）">
+            <button class="add-submit" onclick="addNewContact()">追加</button>
+        </div>
+        <div class="action-row">
+            <button class="action-btn" onclick="window.print()">
+                <span class="icon">🖨️</span>印刷
+            </button>
+            <button class="action-btn" onclick="shareList()">
+                <span class="icon">🔗</span>共有
+            </button>
+            <button class="action-btn hi" onclick="window.print()">
+                <span class="icon">📄</span>PDF保存
+            </button>
+            <button class="action-btn danger" onclick="resetAll()">
+                <span class="icon">🔄</span>全削除
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="detail-modal">
+    <div class="modal">
+        <h3>📝 連絡先を編集</h3>
+        <div class="modal-field">
+            <label>名前 *</label>
+            <input type="text" id="m-name" placeholder="田中 太郎">
+        </div>
+        <div class="modal-field">
+            <label>電話番号 *</label>
+            <input type="tel" id="m-phone" placeholder="090-1234-5678">
+        </div>
+        <div class="modal-field">
+            <label>カテゴリ</label>
+            <select id="m-cat">
+                <option value="公的機関・緊急番号">公的機関・緊急番号</option>
+                <option value="家族・親族">家族・親族</option>
+                <option value="職場・学校">職場・学校</option>
+                <option value="医療・救急">医療・救急</option>
+                <option value="行政・その他">行政・その他</option>
+                <option value="その他">その他</option>
+            </select>
+        </div>
+        <div class="modal-field">
+            <label>続柄・役職</label>
+            <input type="text" id="m-role" placeholder="母、上司、主治医 など">
+        </div>
+        <div class="modal-field">
+            <label>メモ</label>
+            <textarea id="m-note" placeholder="勤務時間・かかりつけ病院名・その他メモ"></textarea>
+        </div>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+            <button class="btn-save"   onclick="saveModal()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const CAT_META = {
+        "公的機関・緊急番号": { badge: "公的", cls: "badge-em", emoji: "🚨" },
+        "家族・親族":         { badge: "家族", cls: "badge-0",  emoji: "🏠" },
+        "職場・学校":         { badge: "職場", cls: "badge-1",  emoji: "🏢" },
+        "医療・救急":         { badge: "医療", cls: "badge-2",  emoji: "🏥" },
+        "行政・その他":       { badge: "行政", cls: "badge-3",  emoji: "🏛" },
+        "その他":             { badge: "他",   cls: "badge-4",  emoji: "📋" },
+    };
+
+    const CATS = ["公的機関・緊急番号", "家族・親族", "職場・学校", "医療・救急", "行政・その他", "その他"];
+
+    const defaultData = [
+        { cat: "公的機関・緊急番号", name: "警察",               phone: "110",          role: "緊急", note: "事件・事故・不審者など" },
+        { cat: "公的機関・緊急番号", name: "消防・救急",         phone: "119",          role: "緊急", note: "火災・救急搬送" },
+        { cat: "公的機関・緊急番号", name: "海上保安庁",         phone: "118",          role: "緊急", note: "海での事故・船舶の緊急通報" },
+        { cat: "公的機関・緊急番号", name: "救急安心センター",   phone: "#7119",        role: "相談", note: "救急車を呼ぶか迷ったときに。24時間対応（地域によって異なる）" },
+        { cat: "公的機関・緊急番号", name: "子ども医療電話相談", phone: "#8000",        role: "相談", note: "夜間・休日の子どもの急病相談。都道府県が運営" },
+        { cat: "公的機関・緊急番号", name: "災害用伝言ダイヤル", phone: "171",          role: "災害", note: "大規模災害時の安否確認。録音・再生で家族に伝言を残せる" },
+        { cat: "公的機関・緊急番号", name: "警察総合相談",       phone: "#9110",        role: "相談", note: "緊急ではない警察への相談窓口（月〜金 8:30-17:15）" },
+        { cat: "公的機関・緊急番号", name: "消費者ホットライン", phone: "188",          role: "相談", note: "詐欺・悪質商法などの消費者トラブル相談" },
+        { cat: "公的機関・緊急番号", name: "DV相談ナビ",        phone: "0570-783-556", role: "相談", note: "配偶者・パートナーからの暴力相談。最寄りの相談窓口につながる" },
+        { cat: "家族・親族",   name: "田中 花子",    phone: "090-0000-0001", role: "配偶者",      note: "勤務先：〇〇株式会社" },
+        { cat: "家族・親族",   name: "田中 一郎",    phone: "090-0000-0002", role: "父",          note: "大阪市在住" },
+        { cat: "家族・親族",   name: "田中 幸子",    phone: "090-0000-0003", role: "母",          note: "大阪市在住" },
+        { cat: "職場・学校",   name: "山田 部長",    phone: "06-0000-0001",  role: "上司",        note: "平日9〜18時" },
+        { cat: "医療・救急",   name: "〇〇クリニック", phone: "06-0000-1234", role: "かかりつけ医", note: "月〜土 9:00-18:00" },
+        { cat: "行政・その他", name: "〇〇市役所",   phone: "06-0000-2222",  role: "行政窓口",    note: "平日8:45-17:15" },
+    ];
+
+    function loadStorage(key, fallback) {
+        try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+    }
+    function saveStorage(key, val) {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+    }
+
+    let contacts  = loadStorage('emergency_contacts', defaultData);
+    let openState = loadStorage('emergency_open', { "公的機関・緊急番号": true, "家族・親族": true });
+    let editingIdx = null;
+
+    function getInitial(name) {
+        const s = name.replace(/\s/g, '');
+        return s.length > 0 ? s[0] : '?';
+    }
+
+    function render() {
+        // ── スマホ：カード ──
+        const cardsEl = document.getElementById('view-cards');
+        cardsEl.innerHTML = '';
+
+        // ── PC：テーブル ──
+        const tableEl = document.getElementById('view-table');
+        const table = document.createElement('table');
+        table.className = 'contacts-table';
+        table.innerHTML = `<thead><tr>
+            <th style="width:36px"></th>
+            <th>名前</th>
+            <th style="width:90px">続柄・役職</th>
+            <th style="width:140px">電話番号</th>
+            <th>メモ</th>
+            <th style="width:60px">操作</th>
+        </tr></thead>`;
+        const tbody = document.createElement('tbody');
+
+        let total = 0;
+        CATS.forEach(cat => {
+            const catContacts = contacts.filter(c => c.cat === cat);
+            const meta   = CAT_META[cat] || { badge: cat, cls: '', emoji: '📋' };
+            const isOpen = !!openState[cat];
+            total += catContacts.length;
+
+            // カード生成（スマホ用）
+            const section = document.createElement('div');
+            section.className = `cat-section ${isOpen ? 'open' : ''}`;
+            const hdr = document.createElement('div');
+            hdr.className = 'cat-header';
+            hdr.innerHTML = `
+                <span class="cat-badge ${meta.cls}">${meta.badge}</span>
+                <span class="cat-label">${meta.emoji} ${cat}</span>
+                <span class="cat-count">${catContacts.length}件</span>
+                <span class="cat-arrow">▼</span>
+            `;
+            hdr.onclick = () => {
+                openState[cat] = !openState[cat];
+                saveStorage('emergency_open', openState);
+                render();
+            };
+            const itemsDiv = document.createElement('div');
+            itemsDiv.className = 'cat-items';
+            if (catContacts.length === 0) {
+                itemsDiv.innerHTML = `<div class="empty-cat">まだ登録されていません</div>`;
+            } else {
+                catContacts.forEach(contact => {
+                    const idx = contacts.indexOf(contact);
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="contact-avatar">${getInitial(contact.name)}</div>
+                        <div class="item-body">
+                            <div class="item-name">${contact.name}</div>
+                            ${contact.role ? `<div class="item-role">${contact.role}</div>` : ''}
+                            <div class="item-phone">${contact.phone}</div>
+                            ${contact.note ? `<div class="item-note">${contact.note}</div>` : ''}
+                        </div>
+                        <div class="item-actions">
+                            <a class="call-btn" href="tel:${contact.phone.replace(/[^\d+]/g, '')}" title="電話する">📞</a>
+                            <button class="delete-btn" onclick="event.stopPropagation(); openEdit(${idx})" title="編集">✏️</button>
+                            <button class="delete-btn" onclick="event.stopPropagation(); removeContact(${idx})" title="削除">×</button>
+                        </div>
+                    `;
+                    itemsDiv.appendChild(card);
+                });
+            }
+            section.appendChild(hdr);
+            section.appendChild(itemsDiv);
+            cardsEl.appendChild(section);
+
+            // テーブル行生成（PC用）
+            if (catContacts.length > 0) {
+                const catTr = document.createElement('tr');
+                catTr.className = 'cat-row';
+                catTr.innerHTML = `<td colspan="6">${meta.emoji} ${cat}　${catContacts.length}件</td>`;
+                tbody.appendChild(catTr);
+                catContacts.forEach(contact => {
+                    const idx = contacts.indexOf(contact);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><a class="call-btn" style="width:28px;height:28px;font-size:0.85rem" href="tel:${contact.phone.replace(/[^\d+]/g, '')}" title="電話する">📞</a></td>
+                        <td class="name-cell">${contact.name}</td>
+                        <td class="role-cell">${contact.role || '—'}</td>
+                        <td class="phone-cell">${contact.phone}</td>
+                        <td class="note-cell">${contact.note || ''}</td>
+                        <td style="white-space:nowrap">
+                            <button class="delete-btn" onclick="openEdit(${idx})" title="編集">✏️</button>
+                            <button class="delete-btn" onclick="removeContact(${idx})" title="削除">×</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        });
+
+        table.appendChild(tbody);
+        tableEl.innerHTML = '';
+        tableEl.appendChild(table);
+
+        const tc = document.getElementById('total-count');
+        if (tc) tc.textContent = total;
+    }
+
+    function save() {
+        saveStorage('emergency_contacts', contacts);
+        saveStorage('emergency_open', openState);
+    }
+
+    window.addNewContact = () => {
+        const name  = document.getElementById('new-name').value.trim();
+        const phone = document.getElementById('new-phone').value.trim();
+        const cat   = document.getElementById('new-cat').value;
+        const role  = document.getElementById('new-role').value.trim();
+        if (!name || !phone) { alert('名前と電話番号は必須です。'); return; }
+        contacts.push({ cat, name, phone, role, note: '' });
+        openState[cat] = true;
+        document.getElementById('new-name').value  = '';
+        document.getElementById('new-phone').value = '';
+        document.getElementById('new-role').value  = '';
+        save(); render();
+    };
+
+    window.removeContact = idx => {
+        if (!confirm(`「${contacts[idx].name}」を削除しますか？`)) return;
+        contacts.splice(idx, 1);
+        save(); render();
+    };
+
+    window.openEdit = idx => {
+        editingIdx = idx;
+        const c = contacts[idx];
+        document.getElementById('m-name').value  = c.name;
+        document.getElementById('m-phone').value = c.phone;
+        document.getElementById('m-cat').value   = c.cat;
+        document.getElementById('m-role').value  = c.role || '';
+        document.getElementById('m-note').value  = c.note || '';
+        document.getElementById('detail-modal').classList.add('open');
+    };
+
+    window.closeModal = () => {
+        document.getElementById('detail-modal').classList.remove('open');
+        editingIdx = null;
+    };
+
+    window.saveModal = () => {
+        const name  = document.getElementById('m-name').value.trim();
+        const phone = document.getElementById('m-phone').value.trim();
+        if (!name || !phone) { alert('名前と電話番号は必須です。'); return; }
+        const obj = {
+            name, phone,
+            cat:  document.getElementById('m-cat').value,
+            role: document.getElementById('m-role').value.trim(),
+            note: document.getElementById('m-note').value.trim(),
+        };
+        if (editingIdx !== null) {
+            contacts[editingIdx] = obj;
+        } else {
+            contacts.push(obj);
+            openState[obj.cat] = true;
+        }
+        closeModal();
+        save(); render();
+    };
+
+    window.resetAll = () => {
+        if (!confirm('登録済みの連絡先をすべて削除しますか？')) return;
+        contacts = [];
+        save(); render();
+    };
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify({ contacts }, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '緊急連絡先.json';
+        a.click();
+    }
+
+    window.importData = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                contacts = data.contacts;
+                save(); render();
+                alert('読み込み完了！');
+            } catch {
+                alert('ファイルが正しくありません');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
+    function shareList() {
+        const lines = contacts.map(c =>
+            `【${c.cat}】${c.name}${c.role ? '（' + c.role + '）' : ''}　${c.phone}${c.note ? '　' + c.note : ''}`
+        );
+        const text = '📞 緊急連絡先リスト\n' + lines.join('\n');
+        if (navigator.share) {
+            navigator.share({ title: '緊急連絡先リスト', text });
+        } else {
+            navigator.clipboard.writeText(text).then(() => alert('リストをコピーしました！'));
+        }
+    }
+
+    ['new-name', 'new-phone', 'new-role'].forEach(id => {
+        document.getElementById(id).addEventListener('keydown', e => {
+            if (e.key === 'Enter') addNewContact();
+        });
+    });
+
+    document.getElementById('detail-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    render();
+</script>
+</body>
+</html>

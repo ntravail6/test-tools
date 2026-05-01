@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>引越しチェックリスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gr: #5C8A6E; --gr-l: #EDF5F0; --am: #E8904A; --am-l: #FEF3EA;
+  --bg: #F7F3EE; --card: #FFFFFF; --text: #2A2724; --sub: #897F78;
+  --bdr: #E4DDD5; --red: #D05A4A;
+  --font: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+  --hi: #ffe066; --mid: #ffc078; --lo: #b2f2bb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--bdr);padding:12px 16px 10px}
+.hdr-inner{max-width:960px;margin:0 auto}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-family:var(--font);font-size:1.15rem;font-weight:700;color:var(--am);letter-spacing:.02em}
+.logo em{color:var(--gr);font-style:normal}
+.hdr-acts{display:flex;gap:6px}
+.iBtn{width:34px;height:34px;border:none;border-radius:8px;background:var(--bg);color:var(--sub);cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center}
+
+/* ── PROGRESS ── */
+.progWrap{display:flex;align-items:center;gap:10px}
+.progBar{flex:1;height:7px;background:#EDE8E3;border-radius:4px;overflow:hidden}
+.progFill{height:100%;background:linear-gradient(90deg,var(--gr),var(--am));width:0;transition:width .4s ease}
+.progTxt{font-size:.72rem;font-weight:700;color:var(--sub);white-space:nowrap;min-width:40px;text-align:right}
+
+/* ── NOTICE ── */
+.notice{background:#fffbe6;border:1px solid #f0d060;border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:.72rem;color:#7a5f10;line-height:1.5;display:flex;align-items:center;gap:6px}
+.notice strong{font-weight:700}
+
+/* ── MAIN ── */
+.main{max-width:960px;margin:0 auto;padding:16px 16px 130px}
+
+/* ── ACCORDION ── */
+.grp{margin-bottom:9px;border-radius:12px;border:1px solid var(--bdr);background:var(--card);overflow:hidden}
+.grpHdr{padding:13px 16px;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;gap:8px}
+.grpTitle{flex:1}
+.grpCount{font-size:.7rem;font-weight:500;color:var(--sub);background:var(--bg);padding:2px 8px;border-radius:12px}
+.grpArr{color:var(--gr);font-size:.7rem;transition:transform .2s}
+.grp.open .grpArr{transform:rotate(180deg)}
+.grpBody{display:none}
+.grp.open .grpBody{display:block}
+
+/* ── PC TABLE ── */
+.tblWrap{overflow-x:auto}
+.taskTbl{width:100%;border-collapse:collapse;font-size:.85rem}
+.taskTbl th{padding:8px 14px;text-align:left;font-size:.68rem;color:var(--sub);font-weight:700;letter-spacing:.04em;border-bottom:1px solid var(--bdr);background:var(--bg)}
+.taskTbl td{padding:11px 14px;border-bottom:1px solid #f5f0eb;vertical-align:middle}
+.taskTbl tr:last-child td{border-bottom:none}
+.taskTbl tr.done .taskName{text-decoration:line-through;opacity:.38}
+.taskTbl tr:hover td{background:var(--gr-l);cursor:pointer}
+.taskCb{width:18px;height:18px;accent-color:var(--gr);cursor:pointer;flex-shrink:0}
+.badge{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:11px;white-space:nowrap}
+.bHi{background:var(--hi);color:#5a4400}
+.bMid{background:var(--mid);color:#7a3800}
+.bLo{background:var(--lo);color:#1a5c2a}
+.taskDel{color:#ddd;font-size:1rem;background:none;border:none;cursor:pointer;padding:4px}
+.taskDel:hover{color:var(--red)}
+
+/* ── MOBILE CARDS (hidden on PC) ── */
+.cardList{display:none}
+.taskCard{display:flex;align-items:center;padding:11px 14px;border-top:1px solid #f5f0eb;cursor:pointer;transition:background .1s;gap:10px}
+.taskCard:active{background:var(--gr-l)}
+.taskCard.done .taskName{text-decoration:line-through;opacity:.38}
+.taskInfo{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.taskName{flex:1;font-size:.84rem;line-height:1.4}
+
+/* ── RESPONSIVE SWITCH at 650px ── */
+@media(max-width:650px){
+  .tblWrap{display:none}
+  .cardList{display:block}
+}
+
+/* ── ADD FORM ── */
+.addBar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:960px;background:var(--card);border-top:1px solid var(--bdr);padding:10px 16px;display:flex;gap:8px;z-index:100}
+.addIn{flex:1;border:1px solid var(--bdr);padding:10px 12px;border-radius:10px;font-family:var(--font);font-size:.85rem;background:var(--bg);color:var(--text);outline:none}
+.addIn:focus{border-color:var(--am);background:#fff}
+.addBtn{padding:10px 18px;background:var(--am);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-weight:700;font-size:.84rem;cursor:pointer;white-space:nowrap}
+
+/* ── OVERLAY / SHEET ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;align-items:flex-end;justify-content:center}
+.overlay.vis{display:flex}
+.sheet{background:#fff;border-radius:20px 20px 0 0;padding:22px 18px;width:100%;max-width:600px}
+.sheetTitle{font-weight:700;font-size:.98rem;text-align:center;margin-bottom:16px;color:var(--text)}
+.sheetBtns{display:flex;flex-direction:column;gap:9px}
+.sheetBtn{padding:13px 14px;border:1px solid var(--bdr);border-radius:11px;background:var(--bg);font-family:var(--font);font-size:.87rem;cursor:pointer;text-align:left;color:var(--text)}
+.sheetBtn:active{background:var(--am-l)}
+.sheetBtn.danger{color:var(--red);border-color:var(--red)}
+.sheetCancel{margin-top:14px;width:100%;padding:11px;border:1px solid var(--bdr);border-radius:10px;background:#fff;cursor:pointer;font-family:var(--font);font-size:.87rem}
+
+/* ── NAV LINK ── */
+.appLink{text-align:center;margin-top:16px;margin-bottom:4px}
+.appLink a{font-size:.75rem;color:var(--gr);text-decoration:none;padding:7px 16px;border:1px solid var(--gr);border-radius:20px}
+
+/* ── FOOTER ── */
+.footer{text-align:center;font-size:.65rem;color:var(--sub);padding:24px 0 10px;opacity:.7;letter-spacing:.06em}
+
+/* ── PRINT ── */
+@media print{
+  .hdr-acts,.addBar,.overlay,.appLink{display:none!important}
+  .grp{break-inside:avoid}
+  .grpBody{display:block!important}
+  .tblWrap{display:block!important}
+  .cardList{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ① HEADER -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div class="logo">📦 引越し<em>チェック</em></div>
+      <div class="hdr-acts">
+        <button class="iBtn" onclick="openOpts()" title="オプション">⚙️</button>
+        <button class="iBtn" onclick="window.print()" title="PDF保存">🖨️</button>
+      </div>
+    </div>
+    <div class="progWrap">
+      <div class="progBar"><div class="progFill" id="pFill"></div></div>
+      <div class="progTxt" id="pTxt">0 / 0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ② MAIN -->
+<div class="main">
+
+  <!-- 注意書き（黄色・免責・1行） -->
+  <div class="notice">
+    ⚠️ <strong>免責事項：</strong>本チェックリストは一般的な情報提供を目的としており、手続きの内容・期限は自治体や状況により異なります。必ず各機関の公式情報をご確認ください。
+  </div>
+
+  <!-- メインカード（JS生成） -->
+  <div id="groups"></div>
+
+  <div class="appLink"><a href="naiken.html">← 🏠 内見ノートへ</a></div>
+
+  <!-- ④ FOOTER -->
+  <div class="footer">© 2026 enu(エヌ) All rights reserved.</div>
+
+</div>
+
+<!-- 追加バー -->
+<div class="addBar">
+  <input class="addIn" id="addIn" type="text" placeholder="新しい項目を追加...">
+  <button class="addBtn" onclick="addCustom()">追加</button>
+</div>
+
+<!-- Options overlay -->
+<div class="overlay" id="optsOL">
+  <div class="sheet">
+    <div class="sheetTitle">⚙️ オプション</div>
+    <div class="sheetBtns">
+      <button class="sheetBtn" onclick="doExport()">💾 データをJSONで保存（バックアップ）</button>
+      <button class="sheetBtn" onclick="doImportTrigger()">📂 JSONを読み込む（復元）</button>
+      <input type="file" id="impFile" style="display:none" accept=".json" onchange="doImport(this)">
+      <button class="sheetBtn danger" onclick="confirmReset()">🗑 すべてのチェックをリセット</button>
+    </div>
+    <button class="sheetCancel" onclick="closeOpts()">キャンセル</button>
+  </div>
+</div>
+
+<script>
+const SK_DEF = 'move_def_v2', SK_CUS = 'move_cus_v2';
+
+const DEFS = [
+  // 引越し前
+  {g:'pre',  n:'引越し業者を予約する',                   p:'hi'},
+  {g:'pre',  n:'新居の電気を申し込む',                   p:'hi'},
+  {g:'pre',  n:'新居のガスを申し込む',                   p:'hi'},
+  {g:'pre',  n:'新居の水道を申し込む',                   p:'hi'},
+  {g:'pre',  n:'インターネット回線を手配する',            p:'hi'},
+  {g:'pre',  n:'郵便物の転送申請（旧住所から）',          p:'mid'},
+  {g:'pre',  n:'転出届を提出する（旧住所の市区町村）',    p:'hi'},
+  {g:'pre',  n:'不用品の処分・リサイクル手配',           p:'mid'},
+  {g:'pre',  n:'梱包資材を揃える',                       p:'mid'},
+  {g:'pre',  n:'荷造りを始める',                         p:'mid'},
+  {g:'pre',  n:'貴重品・重要書類を別にまとめる',         p:'hi'},
+  // 当日
+  {g:'day',  n:'電気・水道が使えることを確認',           p:'hi'},
+  {g:'day',  n:'ガス開栓（立ち会い）',                   p:'hi'},
+  {g:'day',  n:'家具・家電の動作確認',                   p:'mid'},
+  {g:'day',  n:'旧居の清掃・鍵の返却',                   p:'hi'},
+  {g:'day',  n:'荷解きの優先度を決めて着手',             p:'mid'},
+  // 引越し後
+  {g:'post', n:'転入届を提出する（新住所の市区町村）',    p:'hi'},
+  {g:'post', n:'マイナンバーカードの住所変更',           p:'hi'},
+  {g:'post', n:'健康保険・年金の住所変更',               p:'hi'},
+  {g:'post', n:'運転免許証の住所変更',                   p:'hi'},
+  {g:'post', n:'銀行・クレジットカードの住所変更',       p:'mid'},
+  {g:'post', n:'通販サイトの住所変更',                   p:'lo'},
+  {g:'post', n:'各種サブスクの住所変更',                 p:'lo'},
+  {g:'post', n:'家財保険の新居への切り替え',             p:'mid'},
+  {g:'post', n:'勤務先・学校への住所変更届',             p:'mid'},
+  {g:'post', n:'ゴミ収集日・分別ルールを確認',           p:'mid'},
+];
+
+const GRPS = [
+  {id:'pre',  emoji:'🗓', label:'引越し前（〜前日）'},
+  {id:'day',  emoji:'🚛', label:'引越し当日・翌日'},
+  {id:'post', emoji:'📋', label:'引越し後（14日〜1ヶ月以内）'},
+  {id:'cus',  emoji:'✏️', label:'自由追加項目'},
+];
+
+let defDone = {}, customs = [], openGs = new Set(['pre','day','post','cus']);
+
+/* ── localStorage ── */
+function load() {
+  try {
+    const d = localStorage.getItem(SK_DEF);
+    const c = localStorage.getItem(SK_CUS);
+    if (d) defDone = JSON.parse(d);
+    if (c) {
+      const p = JSON.parse(c);
+      customs = p.tasks || [];
+      openGs  = new Set(p.open || ['pre','day','post','cus']);
+    }
+  } catch(e) {}
+  render();
+}
+
+function save() {
+  localStorage.setItem(SK_DEF, JSON.stringify(defDone));
+  localStorage.setItem(SK_CUS, JSON.stringify({tasks: customs, open: [...openGs]}));
+}
+
+/* ── helpers ── */
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function badgeHTML(p, isCus) {
+  if (isCus) return `<span class="badge bMid">追加</span>`;
+  const map = {hi:['bHi','高'], mid:['bMid','中'], lo:['bLo','低']};
+  const [cls, lbl] = map[p] || ['bLo','低'];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+/* ── render: PC table + mobile cards を別DOM生成 ── */
+function render() {
+  // progress
+  let tot = DEFS.length + customs.length, done = 0;
+  DEFS.forEach((_, i) => { if (defDone[i]) done++; });
+  customs.forEach(t => { if (t.done) done++; });
+  document.getElementById('pFill').style.width = (tot > 0 ? done / tot * 100 : 0) + '%';
+  document.getElementById('pTxt').textContent  = done + ' / ' + tot;
+
+  let html = '';
+  GRPS.forEach(g => {
+    const open   = openGs.has(g.id);
+    const isCus  = (g.id === 'cus');
+    let tRows = [], cCards = [], cnt = 0, doneG = 0;
+
+    if (isCus) {
+      cnt = customs.length;
+      customs.forEach((t, i) => {
+        if (t.done) doneG++;
+        const dn = t.done ? ' done' : '';
+
+        // PC table row
+        tRows.push(`
+          <tr class="${dn}" onclick="toggleCus(${i})">
+            <td style="width:38px;text-align:center">
+              <input type="checkbox" class="taskCb" ${t.done ? 'checked' : ''}
+                onclick="event.stopPropagation();" onchange="toggleCus(${i})">
+            </td>
+            <td><span class="taskName">${esc(t.n)}</span></td>
+            <td style="width:70px">${badgeHTML(null, true)}</td>
+            <td style="width:38px;text-align:center">
+              <button class="taskDel" onclick="event.stopPropagation();delCus(${i})">×</button>
+            </td>
+          </tr>`);
+
+        // mobile card
+        cCards.push(`
+          <div class="taskCard${dn}" onclick="toggleCus(${i})">
+            <input type="checkbox" class="taskCb" ${t.done ? 'checked' : ''}
+              onclick="event.stopPropagation();" onchange="toggleCus(${i})">
+            <div class="taskInfo">
+              <span class="taskName">${esc(t.n)}</span>
+              ${badgeHTML(null, true)}
+            </div>
+            <button class="taskDel" onclick="event.stopPropagation();delCus(${i})">×</button>
+          </div>`);
+      });
+
+    } else {
+      const gDefs = DEFS.map((d, i) => ({...d, idx: i})).filter(d => d.g === g.id);
+      cnt = gDefs.length;
+      gDefs.forEach(d => {
+        if (defDone[d.idx]) doneG++;
+        const dn = defDone[d.idx] ? ' done' : '';
+
+        // PC table row
+        tRows.push(`
+          <tr class="${dn}" onclick="toggleDef(${d.idx})">
+            <td style="width:38px;text-align:center">
+              <input type="checkbox" class="taskCb" ${defDone[d.idx] ? 'checked' : ''}
+                onclick="event.stopPropagation();" onchange="toggleDef(${d.idx})">
+            </td>
+            <td><span class="taskName">${esc(d.n)}</span></td>
+            <td style="width:70px">${badgeHTML(d.p, false)}</td>
+            <td style="width:38px"></td>
+          </tr>`);
+
+        // mobile card
+        cCards.push(`
+          <div class="taskCard${dn}" onclick="toggleDef(${d.idx})">
+            <input type="checkbox" class="taskCb" ${defDone[d.idx] ? 'checked' : ''}
+              onclick="event.stopPropagation();" onchange="toggleDef(${d.idx})">
+            <div class="taskInfo">
+              <span class="taskName">${esc(d.n)}</span>
+              ${badgeHTML(d.p, false)}
+            </div>
+          </div>`);
+      });
+    }
+
+    const badge = cnt > 0
+      ? `<span class="grpCount">${doneG}/${cnt}</span>`
+      : '';
+
+    // PC DOM (table)
+    const tableDOM = `
+      <div class="tblWrap">
+        <table class="taskTbl">
+          <thead><tr>
+            <th></th>
+            <th>タスク</th>
+            <th>優先度</th>
+            <th></th>
+          </tr></thead>
+          <tbody>${tRows.join('')}</tbody>
+        </table>
+      </div>`;
+
+    // Mobile DOM (cards)
+    const cardDOM = `<div class="cardList">${cCards.join('')}</div>`;
+
+    html += `
+      <div class="grp${open ? ' open' : ''}">
+        <div class="grpHdr" onclick="toggleG('${g.id}')">
+          <span class="grpTitle">${g.emoji} ${g.label}</span>
+          ${badge}
+          <span class="grpArr">▼</span>
+        </div>
+        <div class="grpBody">
+          ${tableDOM}
+          ${cardDOM}
+        </div>
+      </div>`;
+  });
+
+  document.getElementById('groups').innerHTML = html;
+}
+
+/* ── event handlers ── */
+function toggleDef(i) { defDone[i] = !defDone[i]; save(); render(); }
+function toggleCus(i) { customs[i].done = !customs[i].done; save(); render(); }
+function delCus(i)    { customs.splice(i, 1); save(); render(); }
+function toggleG(id)  { openGs.has(id) ? openGs.delete(id) : openGs.add(id); save(); render(); }
+
+function addCustom() {
+  const inp = document.getElementById('addIn');
+  const v   = (inp.value || '').trim();
+  if (!v) return;
+  customs.push({n: v, done: false});
+  openGs.add('cus');
+  inp.value = '';
+  save(); render();
+  setTimeout(() => {
+    const els  = document.querySelectorAll('.grp');
+    const last = els[els.length - 1];
+    if (last) last.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 100);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('addIn').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addCustom();
+  });
+});
+
+/* ── overlay ── */
+function openOpts()  { document.getElementById('optsOL').classList.add('vis'); }
+function closeOpts() { document.getElementById('optsOL').classList.remove('vis'); }
+
+/* ── export / import / reset ── */
+function doExport() {
+  const data = {defDone, customs};
+  const b = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = `moving_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  closeOpts();
+}
+
+function doImportTrigger() { document.getElementById('impFile').click(); }
+
+function doImport(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!confirm('現在のデータを上書きしますか？')) return;
+      defDone = d.defDone || {};
+      customs = d.customs || [];
+      save(); render(); closeOpts();
+    } catch { alert('読み込みに失敗しました'); }
+  };
+  r.readAsText(f);
+}
+
+function confirmReset() {
+  if (!confirm('すべてのチェックをリセットしますか？\nカスタム項目は残ります。')) return;
+  defDone = {};
+  customs.forEach(t => t.done = false);
+  save(); render(); closeOpts();
+}
+
+load();
+</script>
+</body>
+</html>

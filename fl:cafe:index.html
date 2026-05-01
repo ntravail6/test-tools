@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>経費判定＆メール送信</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
+<style>
+  :lang(ja), .ja { font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif; }
+</style>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --rose:   #c0666a;
+            --rose-l: #f3d0d2;
+            --rose-bg:#fff8f8;
+            --ink:    #1e1e1e;
+            --muted:  #7a7a7a;
+            --sub:    #aaa9a8;
+            --line:   #e8e2dd;
+            --ok-bg:  #e8f5ec;
+            --ok-fg:  #1f6e36;
+            --ng-bg:  #fde9e9;
+            --ng-fg:  #b52929;
+            --radius: 14px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.07);
+        }
+
+        body {
+            font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+            background: #f5f0eb;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 28px 16px 48px;
+        }
+
+        /* ─── outer shell ─── */
+        .notice{background:#fdf5f5;border:1px solid var(--rose-l);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:.72rem;color:#8a4a4d;line-height:1.75}
+        .notice strong{font-weight:700}
+        .caution{background:#fafafa;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:14px;font-size:.7rem;color:var(--muted);line-height:1.7}
+        .caution strong{font-weight:700;color:#555}
+        .footer{text-align:center;font-family:'Quicksand','Arial Rounded MT Bold',sans-serif;font-size:0.625rem;color:var(--sub);opacity:0.7;letter-spacing:0.12em;margin-top:18px;padding-bottom:4px;}
+
+        .shell {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* ─── header ─── */
+        .header {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+        .header-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .header-title {
+            font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+            font-size: 1.55rem;
+            color: var(--ink);
+            letter-spacing: 0.01em;
+        }
+        .header-title span { color: var(--rose); }
+
+        /* ─── progress bar ─── */
+        .progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            padding: 0 2px;
+        }
+        .prog-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--line);
+            transition: background 0.35s, transform 0.35s;
+            flex-shrink: 0;
+        }
+        .prog-dot.done { background: var(--rose-l); }
+        .prog-dot.active { background: var(--rose); transform: scale(1.4); }
+        .prog-line { flex: 1; height: 2px; background: var(--line); border-radius: 2px; }
+        .prog-line.done { background: var(--rose-l); }
+
+        /* ─── card ─── */
+        .card {
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        /* ─── email bar ─── */
+        .email-bar {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .email-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+            opacity: 0.45;
+        }
+        .email-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.8rem;
+            color: var(--ink);
+            background: transparent;
+        }
+        .email-bar input::placeholder { color: #bbb; }
+
+        /* ─── step panel ─── */
+        .step-body {
+            padding: 28px 24px 24px;
+        }
+
+        /* ─── question area ─── */
+        .step { display: none; }
+        .step.active {
+            display: block;
+            animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .q-num {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--rose);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .q-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        /* ─── choice buttons ─── */
+        .choices { display: flex; flex-direction: column; gap: 9px; }
+        .choice-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 13px 16px;
+            border: 1.5px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--ink);
+            text-align: left;
+            transition: border-color 0.18s, background 0.18s, transform 0.12s;
+        }
+        .choice-btn:hover {
+            border-color: var(--rose-l);
+            background: var(--rose-bg);
+        }
+        .choice-btn:active { transform: scale(0.98); }
+        .choice-btn .icon {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: var(--rose-bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        /* ─── back link ─── */
+        .back-link {
+            display: none;
+            margin-top: 16px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0;
+        }
+        .back-link:hover { color: var(--rose); }
+        .back-link.visible { display: block; }
+
+        /* ─── result ─── */
+        #result-step { display: none; }
+        #result-step.active {
+            display: block;
+            animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 11px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+        }
+        .badge-ok { background: var(--ok-bg); color: var(--ok-fg); }
+        .badge-ng { background: var(--ng-bg); color: var(--ng-fg); }
+
+        .result-cat {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+        .result-tip {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        /* ─── form fields ─── */
+        .field-group { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+        .field-wrap { position: relative; }
+        .field-wrap label {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .field-wrap input {
+            width: 100%;
+            padding: 10px 13px;
+            border: 1.5px solid var(--line);
+            border-radius: 9px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.18s;
+            background: #fafafa;
+        }
+        .field-wrap input:focus { border-color: var(--rose); background: #fff; }
+
+        /* ─── submit btn ─── */
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--rose);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: background 0.18s, transform 0.12s;
+        }
+        .submit-btn:hover { background: #b05559; }
+        .submit-btn:active { transform: scale(0.98); }
+        .submit-btn .arrow { font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<div class="shell">
+
+    <!-- header -->
+    <div class="header">
+        <div class="header-label">Expense Check</div>
+        <div class="header-title">経費<span>判定</span></div>
+    </div>
+
+    <!-- notice -->
+    <div class="notice">
+        💾 <strong>入力内容は自動保存されます。</strong>保存先はこのブラウザ・端末のみです。別のブラウザや端末では引き継がれません。<br>
+        ✉️ メールの起動には、お使いの端末にメールアプリが設定されている必要があります。
+    </div>
+
+    <!-- progress -->
+    <div class="progress-wrap" id="progress">
+        <div class="prog-dot active" id="pd0"></div>
+        <div class="prog-line" id="pl0"></div>
+        <div class="prog-dot" id="pd1"></div>
+        <div class="prog-line" id="pl1"></div>
+        <div class="prog-dot" id="pd2"></div>
+        <div class="prog-line" id="pl2"></div>
+        <div class="prog-dot" id="pd3"></div>
+    </div>
+
+    <!-- card -->
+    <div class="card">
+
+        <!-- email bar -->
+        <div class="email-bar">
+            <span class="email-icon">✉</span>
+            <input type="email" id="target_email" placeholder="送信先メールアドレス（任意）">
+        </div>
+
+        <!-- step body -->
+        <div class="step-body">
+
+            <!-- Q1: 誰と -->
+            <div id="q1" class="step active">
+                <div class="q-num">Step 1 / 4</div>
+                <div class="q-text">誰と飲食しましたか？</div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="goStep('q_alone', 1)">
+                        <span class="icon">🧍</span>ひとりで
+                    </button>
+                    <button class="choice-btn" onclick="goStep('q_guest', 1)">
+                        <span class="icon">🤝</span>客先・取引先
+                    </button>
+                </div>
+            </div>
+
+            <!-- Q alone: 目的 -->
+            <div id="q_alone" class="step">
+                <div class="q-num">Step 2 / 4</div>
+                <div class="q-text">目的は何ですか？</div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="finish('private', 2)">
+                        <span class="icon">🏠</span>私用
+                    </button>
+                    <button class="choice-btn" onclick="goStep('q_work', 2)">
+                        <span class="icon">💼</span>仕事
+                    </button>
+                </div>
+            </div>
+
+            <!-- Q work: 内容 -->
+            <div id="q_work" class="step">
+                <div class="q-num">Step 3 / 4</div>
+                <div class="q-text">仕事の内容は？</div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="finish('study', 3)">
+                        <span class="icon">🔬</span>研究・視察
+                    </button>
+                    <button class="choice-btn" onclick="goStep('q_order', 3)">
+                        <span class="icon">🖥️</span>ひとり仕事
+                    </button>
+                </div>
+            </div>
+
+            <!-- Q order: 注文 -->
+            <div id="q_order" class="step">
+                <div class="q-num">Step 4 / 4</div>
+                <div class="q-text">注文内容は？</div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="finish('drink', 4)">
+                        <span class="icon">☕</span>飲み物
+                    </button>
+                    <button class="choice-btn" onclick="finish('food', 4)">
+                        <span class="icon">🍱</span>食べ物
+                    </button>
+                </div>
+            </div>
+
+            <!-- Q guest: 金額帯 -->
+            <div id="q_guest" class="step">
+                <div class="q-num">Step 2 / 4</div>
+                <div class="q-text">内容と金額は？</div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="finish('mtg', 2)">
+                        <span class="icon">📋</span>打合せ　／　1.1万円以下
+                    </button>
+                    <button class="choice-btn" onclick="finish('high', 2)">
+                        <span class="icon">🥂</span>接待　／　1.1万円超
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="result-step">
+                <div id="result-badge-wrap"></div>
+                <div id="result-cat" class="result-cat"></div>
+                <div id="result-tip" class="result-tip"></div>
+                <div class="field-group">
+                    <div class="field-wrap">
+                        <label>店名・メモ</label>
+                        <input type="text" id="memo" placeholder="例）〇〇レストラン">
+                    </div>
+                    <div class="field-wrap">
+                        <label>金額（円）</label>
+                        <input type="number" id="amt" placeholder="例）3500">
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="saveAndMail()">
+                    保存してメールを起動 <span class="arrow">→</span>
+                </button>
+                <div class="caution">
+                    ⚠️ この判定は一般的な目安です。実際の経費処理は社内規定や税法により異なります。詳細は<strong>税理士や経理担当者</strong>にご確認ください。
+                </div>
+            </div>
+
+            <!-- back btn -->
+            <button class="back-link" id="back-btn" onclick="goBack()">← やり直す</button>
+
+        </div><!-- /step-body -->
+    </div><!-- /card -->
+
+<!-- footer -->
+    <div class="footer">© 2026 enu(エヌ) All rights reserved.</div>
+
+</div><!-- /shell -->
+
+<script>
+    let history = [];   // stack of step ids
+    let cur = {};
+
+    const STEPS = ['q1','q_alone','q_work','q_order','q_guest'];
+    const backBtn = document.getElementById('back-btn');
+
+    function showStep(id) {
+        // hide all
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('result-step').classList.remove('active');
+
+        if (id === 'result') {
+            document.getElementById('result-step').classList.add('active');
+        } else {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
+        }
+    }
+
+    function updateProgress(stepIdx) {
+        for (let i = 0; i <= 3; i++) {
+            const dot = document.getElementById('pd'+i);
+            dot.classList.remove('active','done');
+            if (i < stepIdx)  dot.classList.add('done');
+            if (i === stepIdx) dot.classList.add('active');
+        }
+        for (let i = 0; i <= 2; i++) {
+            const line = document.getElementById('pl'+i);
+            line.classList.toggle('done', i < stepIdx);
+        }
+    }
+
+    function goStep(id, progressIdx) {
+        history.push({ step: getCurrentStep(), progress: progressIdx - 1 });
+        showStep(id);
+        updateProgress(progressIdx);
+        backBtn.classList.add('visible');
+    }
+
+    function getCurrentStep() {
+        const active = document.querySelector('.step.active');
+        if (active) return active.id;
+        if (document.getElementById('result-step').classList.contains('active')) return 'result';
+        return 'q1';
+    }
+
+    function goBack() {
+        if (history.length === 0) return;
+        const prev = history.pop();
+        showStep(prev.step);
+        updateProgress(prev.progress);
+        document.getElementById('result-step').classList.remove('active');
+        if (history.length === 0) backBtn.classList.remove('visible');
+    }
+
+    function finish(type, progressIdx) {
+        history.push({ step: getCurrentStep(), progress: progressIdx - 1 });
+
+        const map = {
+            private: { ok: false, cat: '経費不可',    tip: '私用は経費計上できません' },
+            study:   { ok: true,  cat: '研究開発費',   tip: '目的・視察内容をメモしておきましょう' },
+            drink:   { ok: true,  cat: '会議費',   tip: '飲み物のみOK（食事はNG）' },
+            food:    { ok: false, cat: '経費不可',    tip: 'ひとりでの食事は原則NGです' },
+            mtg:     { ok: true,  cat: '会議費',       tip: '参加人数・打合せ内容をメモ' },
+            high:    { ok: true,  cat: '接待交際費',   tip: '参加者の氏名・会社名をメモ' },
+        };
+        cur = map[type] || {};
+
+        const badgeWrap = document.getElementById('result-badge-wrap');
+        badgeWrap.innerHTML = cur.ok
+            ? `<span class="result-badge badge-ok">✓ 経費OK</span>`
+            : `<span class="result-badge badge-ng">✕ 経費NG</span>`;
+
+        document.getElementById('result-cat').textContent = cur.cat;
+        document.getElementById('result-tip').textContent = cur.tip;
+
+        showStep('result');
+        updateProgress(4);
+        backBtn.classList.add('visible');
+    }
+
+    function saveAndMail() {
+        const a = document.getElementById('amt').value;
+        const m = document.getElementById('memo').value || '未入力';
+        const email = document.getElementById('target_email').value;
+        if (!a) { alert('金額を入力してください'); return; }
+
+        const logs = JSON.parse(localStorage.getItem('logs_mail') || '[]');
+        logs.unshift({ d: new Date().toLocaleDateString(), a, m, c: cur.cat });
+        localStorage.setItem('logs_mail', JSON.stringify(logs));
+
+        const subject = encodeURIComponent(`【飲食費判定】${cur.cat}（${a}円）`);
+        const body = encodeURIComponent(
+            `以下の飲食費を記録しました。\n\n日付: ${new Date().toLocaleDateString()}\n判定: ${cur.cat}\n金額: ${a}円\nメモ: ${m}\n備考: ${cur.tip}`
+        );
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+        setTimeout(() => { location.reload(); }, 1000);
+    }
+</script>
+</body>
+</html>
