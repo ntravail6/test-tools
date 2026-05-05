@@ -6,7 +6,7 @@
     <title>カフェ経費判定</title>
 
     <!-- favicon (SVG) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23f5f0eb'/><text x='16' y='24' font-size='20' text-anchor='middle'>☕</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23f5f0eb'/><rect x='1' y='1' width='30' height='30' rx='6.5' fill='none' stroke='%23c0666a' stroke-width='1.5' opacity='0.5'/><text x='16' y='24' font-size='20' text-anchor='middle'>☕</text></svg>">
 
     <!-- PWA / ホーム画面追加 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -624,6 +624,18 @@
             ctx.closePath();
             ctx.fillStyle = BG;
             ctx.fill();
+            // 枠線（ローズ・細め・半透明）
+            const bw = size * 0.03;
+            ctx.beginPath();
+            ctx.moveTo(r + bw, bw);
+            ctx.arcTo(size - bw, bw, size - bw, size - bw, r - bw);
+            ctx.arcTo(size - bw, size - bw, bw, size - bw, r - bw);
+            ctx.arcTo(bw, size - bw, bw, bw, r - bw);
+            ctx.arcTo(bw, bw, size - bw, bw, r - bw);
+            ctx.closePath();
+            ctx.strokeStyle = 'rgba(192, 102, 106, 0.5)';
+            ctx.lineWidth = bw;
+            ctx.stroke();
             ctx.font = `${size * 0.58}px serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -642,7 +654,7 @@
         });
         const manifest = {
             name: 'カフェ経費判定',
-            short_name: 'カフェ経費',
+            short_name: 'カフェ経費判定',
             start_url: location.href,
             display: 'standalone',
             background_color: BG,
