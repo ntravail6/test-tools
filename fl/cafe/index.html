@@ -6,7 +6,7 @@
     <title>カフェ経費判定</title>
 
     <!-- favicon (SVG) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23f5f0eb'/><rect x='1' y='1' width='30' height='30' rx='6.5' fill='none' stroke='%23c0666a' stroke-width='1.5' opacity='0.5'/><text x='16' y='24' font-size='20' text-anchor='middle'>☕</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23f5f0eb'/><text x='16' y='24' font-size='20' text-anchor='middle'>☕</text></svg>">
 
     <!-- PWA / ホーム画面追加 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,6 +68,14 @@
         .notice strong{font-weight:700}
         .caution{background:#fafafa;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:14px;font-size:.7rem;color:var(--muted);line-height:1.7}
         .caution strong{font-weight:700;color:#555}
+        /* ─── 履歴 ─── */
+        .log-area{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+        .log-item{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--ink)}
+        .log-item .log-date{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-size:.68rem;color:var(--sub);flex-shrink:0}
+        .log-item .log-cat{font-weight:700;flex-shrink:0;color:var(--rose)}
+        .log-item .log-memo{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+        .log-item .log-amt{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-weight:700;flex-shrink:0}
+        .log-empty{text-align:center;font-size:.75rem;color:var(--sub);padding:14px 0}
         .footer{text-align:center;font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-size:0.625rem;color:var(--sub);opacity:0.7;letter-spacing:0.14em;margin-top:18px;padding-bottom:4px;}
         /* ─── toolbar ─── */
         .fc-pdf{background:#fef0f0;border-color:#f0c8c8;color:#804a52}
@@ -469,9 +477,6 @@
                 <button class="submit-btn" onclick="saveData()">
                     保存する <span class="arrow">→</span>
                 </button>
-                <div class="caution">
-                    ⚠️ この判定は一般的な目安です。実際の経費処理は社内規定や税法により異なります。詳細は<strong>税理士や経理担当者</strong>にご確認ください。
-                </div>
             </div>
 
             <!-- back btn -->
@@ -479,6 +484,9 @@
 
         </div><!-- /step-body -->
     </div><!-- /card -->
+
+    <!-- 履歴 -->
+    <div id="log-area"></div>
 
     <!-- toolbar -->
     <div class="toolbar">
@@ -574,6 +582,20 @@
         backBtn.classList.add('visible');
     }
 
+    function renderLogs() {
+        const logs = JSON.parse(localStorage.getItem('logs_mail') || '[]');
+        const area = document.getElementById('log-area');
+        if (logs.length === 0) { area.innerHTML = ''; return; }
+        area.innerHTML = `<div class="log-area">${logs.map(l => `
+            <div class="log-item">
+                <span class="log-date">${l.d}</span>
+                <span class="log-cat">${l.c}</span>
+                <span class="log-memo">${l.m}</span>
+                <span class="log-amt">¥${Number(l.a).toLocaleString()}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+
     function saveData() {
         const a = document.getElementById('amt').value;
         const m = document.getElementById('memo').value || '未入力';
@@ -581,8 +603,12 @@
         const logs = JSON.parse(localStorage.getItem('logs_mail') || '[]');
         logs.unshift({ d: new Date().toLocaleDateString(), a, m, c: cur.cat });
         localStorage.setItem('logs_mail', JSON.stringify(logs));
+        renderLogs();
         toast('💾 保存しました');
     }
+
+    // ページ読み込み時に履歴を表示
+    renderLogs();
 
     // ─── notice minimize ───
     const HELP_URL = 'https://enu-tools.pages.dev/help/';
@@ -624,18 +650,6 @@
             ctx.closePath();
             ctx.fillStyle = BG;
             ctx.fill();
-            // 枠線（ローズ・細め・半透明）
-            const bw = size * 0.03;
-            ctx.beginPath();
-            ctx.moveTo(r + bw, bw);
-            ctx.arcTo(size - bw, bw, size - bw, size - bw, r - bw);
-            ctx.arcTo(size - bw, size - bw, bw, size - bw, r - bw);
-            ctx.arcTo(bw, size - bw, bw, bw, r - bw);
-            ctx.arcTo(bw, bw, size - bw, bw, r - bw);
-            ctx.closePath();
-            ctx.strokeStyle = 'rgba(192, 102, 106, 0.5)';
-            ctx.lineWidth = bw;
-            ctx.stroke();
             ctx.font = `${size * 0.58}px serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
