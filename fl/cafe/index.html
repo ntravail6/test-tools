@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>経費判定＆メール送信</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
-<style>
-  :lang(ja), .ja { font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif; }
-</style>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -28,7 +25,7 @@
         }
 
         body {
-            font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+            font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
             background: #f5f0eb;
             min-height: 100vh;
             display: flex;
@@ -38,21 +35,70 @@
         }
 
         /* ─── outer shell ─── */
-        .notice{background:#fdf5f5;border:1px solid var(--rose-l);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:.72rem;color:#8a4a4d;line-height:1.75}
+        .notice-area{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+        .notice-wrap{width:100%}
+        .notice-wrap.is-mini{width:auto}
+        .notice-wrap > .notice{display:flex}
+        .notice-wrap > .notice-mini{display:none}
+        .notice-wrap.is-mini > .notice{display:none}
+        .notice-wrap.is-mini > .notice-mini{display:inline-flex}
+        .notice{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.75;gap:8px;align-items:flex-start;border:1px solid}
+        .notice .icon{font-size:.95rem;line-height:1.4;flex-shrink:0}
+        .notice .body{flex:1;min-width:0}
+        .notice .close-btn{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;flex-shrink:0;background:transparent;border:none;cursor:pointer;font-size:1rem;line-height:1;padding:4px 6px;margin:-4px -6px -4px 0;opacity:.45;color:inherit;transition:opacity .15s}
+        .notice .close-btn:hover{opacity:1}
+        .notice-mini{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;width:30px;height:30px;border-radius:50%;border:1px solid;cursor:pointer;font-size:.85rem;line-height:1;padding:0;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+        .notice-mini:hover{transform:scale(1.08);box-shadow:0 1px 4px rgba(0,0,0,.10)}
+        .notice-info,.notice-mini-info{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
+        .notice-disclaim,.notice-mini-disclaim{background:#faecec;border-color:#e8c8c8;color:#804a52}
+        .notice-help,.notice-mini-help{background:#eef2ec;border-color:#c8d3c1;color:#4a5d44}
+        .notice-help .help-link{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;color:#344230;text-decoration:underline;text-underline-offset:2px;font-weight:700;font-size:.78rem;white-space:nowrap;margin-left:4px}
+        .notice-help .help-link:hover{color:#1f2c1c}
         .notice strong{font-weight:700}
         .caution{background:#fafafa;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:14px;font-size:.7rem;color:var(--muted);line-height:1.7}
         .caution strong{font-weight:700;color:#555}
-        .footer{text-align:center;font-family:'Quicksand','Arial Rounded MT Bold',sans-serif;font-size:0.625rem;color:var(--sub);opacity:0.7;letter-spacing:0.12em;margin-top:18px;padding-bottom:4px;}
+        .footer{text-align:center;font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-size:0.625rem;color:var(--sub);opacity:0.7;letter-spacing:0.14em;margin-top:18px;padding-bottom:4px;}
+        /* ─── toolbar ─── */
+        .fc-pdf{background:#fef0f0;border-color:#f0c8c8;color:#804a52}
+        .fc-print{background:#f0f1f3;border-color:#c8cdd4;color:#525860}
+        .fc-share{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
+        .fc-json{background:#f5f1e8;border-color:#d8cdaa;color:#6b5a3d}
+        .btn-card{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;flex:1 1 80px;min-width:80px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;padding:13px 6px 11px;border-radius:10px;border:1px solid;cursor:pointer;gap:2px}
+        .btn-card .icon{font-size:1.3rem;line-height:1}
+        .btn-card .label{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-size:.62rem;font-weight:700;text-align:center;color:inherit;line-height:1.2}
+        .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:16px 14px;background:#fff;border:1px solid #ece5d6;border-radius:10px;align-items:center;margin-bottom:6px}
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d2820;color:#fff;padding:10px 18px;border-radius:999px;font-size:.78rem;font-weight:700;font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        @media print{.toolbar,.toast{display:none !important}}
 
         .shell {
             width: 100%;
-            max-width: 400px;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        /* ─── 650〜960px ─── */
+        @media (min-width: 650px) {
+            body { padding: 36px 0 56px; }
+            .shell { padding: 0 24px; }
+        }
+
+        /* ─── 960px超 ─── */
+        @media (min-width: 960px) {
+            body { padding: 48px 0 64px; }
+            .shell { padding: 0 32px; }
+            .step-body { padding: 32px 32px 28px; }
+            .header-title { font-size: 1.75rem; }
+            .choice-btn { font-size: 0.92rem; padding: 15px 18px; }
         }
 
         /* ─── header ─── */
         .header {
             text-align: center;
-            margin-bottom: 22px;
+            margin-top: 12px;
+            margin-bottom: 12px;
         }
         .header-label {
             font-size: 0.7rem;
@@ -63,12 +109,20 @@
             margin-bottom: 4px;
         }
         .header-title {
-            font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+            font-family: 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
             font-size: 1.55rem;
             color: var(--ink);
             letter-spacing: 0.01em;
+            margin-bottom: 5px;
         }
         .header-title span { color: var(--rose); }
+        .header-sub {
+            font-size: 0.7rem;
+            color: var(--sub);
+            letter-spacing: 0.1em;
+            font-family: 'Quicksand', 'Arial Rounded MT Bold', sans-serif;
+            font-weight: 500;
+        }
 
         /* ─── progress bar ─── */
         .progress-wrap {
@@ -97,30 +151,6 @@
             box-shadow: var(--shadow);
             overflow: hidden;
         }
-
-        /* ─── email bar ─── */
-        .email-bar {
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--line);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .email-icon {
-            font-size: 1rem;
-            flex-shrink: 0;
-            opacity: 0.45;
-        }
-        .email-bar input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-family: inherit;
-            font-size: 0.8rem;
-            color: var(--ink);
-            background: transparent;
-        }
-        .email-bar input::placeholder { color: #bbb; }
 
         /* ─── step panel ─── */
         .step-body {
@@ -288,16 +318,39 @@
 
 <div class="shell">
 
-    <!-- header -->
-    <div class="header">
-        <div class="header-label">Expense Check</div>
-        <div class="header-title">経費<span>判定</span></div>
+    <!-- notice-area -->
+    <div class="notice-area">
+        <div class="notice-wrap" data-notice-id="info">
+            <div class="notice notice-info">
+                <span class="icon">💾</span>
+                <span class="body">データはお使いの端末・ブラウザの中にのみ保存されます。サーバーには送信されないので、安心してご利用いただけます。</span>
+                <button type="button" class="close-btn" aria-label="最小化">×</button>
+            </div>
+            <button type="button" class="notice-mini notice-mini-info" aria-label="案内を表示" title="案内を表示">💾</button>
+        </div>
+        <div class="notice-wrap" data-notice-id="disclaim">
+            <div class="notice notice-disclaim">
+                <span class="icon">🚨</span>
+                <span class="body">本ツールの判定は一般的な目安です。実際の経費処理は税法・社内規定により異なります。詳細は<strong>税理士や経理担当者</strong>にご確認ください。</span>
+                <button type="button" class="close-btn" aria-label="最小化">×</button>
+            </div>
+            <button type="button" class="notice-mini notice-mini-disclaim" aria-label="免責事項を表示" title="免責事項を表示">🚨</button>
+        </div>
+        <div class="notice-wrap" data-notice-id="help">
+            <div class="notice notice-help">
+                <span class="icon">📚</span>
+                <span class="body">使い方・FAQ・トラブル対応は<a href="" class="help-link" id="help-page-link">こちらから</a></span>
+                <button type="button" class="close-btn" aria-label="最小化">×</button>
+            </div>
+            <button type="button" class="notice-mini notice-mini-help" aria-label="ヘルプを表示" title="ヘルプを表示">📚</button>
+        </div>
     </div>
 
-    <!-- notice -->
-    <div class="notice">
-        💾 <strong>入力内容は自動保存されます。</strong>保存先はこのブラウザ・端末のみです。別のブラウザや端末では引き継がれません。<br>
-        ✉️ メールの起動には、お使いの端末にメールアプリが設定されている必要があります。
+    <!-- header -->
+    <div class="header">
+        <div class="header-label">Café Expense Check</div>
+        <div class="header-title">カフェ経費<span>判定</span></div>
+        <div class="header-sub">個人事業主向け</div>
     </div>
 
     <!-- progress -->
@@ -313,12 +366,6 @@
 
     <!-- card -->
     <div class="card">
-
-        <!-- email bar -->
-        <div class="email-bar">
-            <span class="email-icon">✉</span>
-            <input type="email" id="target_email" placeholder="送信先メールアドレス（任意）">
-        </div>
 
         <!-- step body -->
         <div class="step-body">
@@ -379,16 +426,16 @@
                 </div>
             </div>
 
-            <!-- Q guest: 金額帯 -->
+            <!-- Q guest: 目的 -->
             <div id="q_guest" class="step">
                 <div class="q-num">Step 2 / 4</div>
-                <div class="q-text">内容と金額は？</div>
+                <div class="q-text">内容は何でしたか？</div>
                 <div class="choices">
                     <button class="choice-btn" onclick="finish('mtg', 2)">
-                        <span class="icon">📋</span>打合せ　／　1.1万円以下
+                        <span class="icon">📋</span>打合せ・ミーティング
                     </button>
                     <button class="choice-btn" onclick="finish('high', 2)">
-                        <span class="icon">🥂</span>接待　／　1.1万円超
+                        <span class="icon">🥂</span>接待・慰労
                     </button>
                 </div>
             </div>
@@ -408,8 +455,8 @@
                         <input type="number" id="amt" placeholder="例）3500">
                     </div>
                 </div>
-                <button class="submit-btn" onclick="saveAndMail()">
-                    保存してメールを起動 <span class="arrow">→</span>
+                <button class="submit-btn" onclick="saveData()">
+                    保存する <span class="arrow">→</span>
                 </button>
                 <div class="caution">
                     ⚠️ この判定は一般的な目安です。実際の経費処理は社内規定や税法により異なります。詳細は<strong>税理士や経理担当者</strong>にご確認ください。
@@ -422,10 +469,17 @@
         </div><!-- /step-body -->
     </div><!-- /card -->
 
-<!-- footer -->
+    <!-- toolbar -->
+    <div class="toolbar">
+        <button class="btn-card fc-share" id="btn-share"><span class="icon">🔗</span><span class="label">共有</span></button>
+    </div>
+
+    <!-- footer -->
     <div class="footer">© 2026 enu(エヌ) All rights reserved.</div>
 
 </div><!-- /shell -->
+
+<div class="toast" id="toast"></div>
 
 <script>
     let history = [];   // stack of step ids
@@ -487,12 +541,12 @@
         history.push({ step: getCurrentStep(), progress: progressIdx - 1 });
 
         const map = {
-            private: { ok: false, cat: '経費不可',    tip: '私用は経費計上できません' },
-            study:   { ok: true,  cat: '研究開発費',   tip: '目的・視察内容をメモしておきましょう' },
-            drink:   { ok: true,  cat: '会議費',   tip: '飲み物のみOK（食事はNG）' },
-            food:    { ok: false, cat: '経費不可',    tip: 'ひとりでの食事は原則NGです' },
-            mtg:     { ok: true,  cat: '会議費',       tip: '参加人数・打合せ内容をメモ' },
-            high:    { ok: true,  cat: '接待交際費',   tip: '参加者の氏名・会社名をメモ' },
+            private:  { ok: false, cat: '経費不可',               tip: '私用は経費計上できません' },
+            study:    { ok: true,  cat: '雑費（研究費・取材費も可）', tip: 'レシートの裏に視察・取材の目的を記載しておきましょう' },
+            drink:    { ok: true,  cat: '雑費',                   tip: 'レシートの裏にいつ・何の仕事をしたか記載しておきましょう' },
+            food:     { ok: false, cat: '経費不可',               tip: '食事代は生活費とみなされ原則NG。飲み物と食事は領収書を分けてもらいましょう' },
+            mtg:      { ok: true,  cat: '会議費',                  tip: '誰と・何の打合せかをレシートの裏に記載。雑費・接待交際費でも可' },
+            high:     { ok: true,  cat: '接待交際費',              tip: '相手の氏名・会社名・目的をレシートの裏に記載しておきましょう' },
         };
         cur = map[type] || {};
 
@@ -509,23 +563,35 @@
         backBtn.classList.add('visible');
     }
 
-    function saveAndMail() {
+    function saveData() {
         const a = document.getElementById('amt').value;
         const m = document.getElementById('memo').value || '未入力';
-        const email = document.getElementById('target_email').value;
         if (!a) { alert('金額を入力してください'); return; }
-
         const logs = JSON.parse(localStorage.getItem('logs_mail') || '[]');
         logs.unshift({ d: new Date().toLocaleDateString(), a, m, c: cur.cat });
         localStorage.setItem('logs_mail', JSON.stringify(logs));
-
-        const subject = encodeURIComponent(`【飲食費判定】${cur.cat}（${a}円）`);
-        const body = encodeURIComponent(
-            `以下の飲食費を記録しました。\n\n日付: ${new Date().toLocaleDateString()}\n判定: ${cur.cat}\n金額: ${a}円\nメモ: ${m}\n備考: ${cur.tip}`
-        );
-        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-        setTimeout(() => { location.reload(); }, 1000);
+        toast('💾 保存しました');
     }
+
+    // ─── notice minimize ───
+    const HELP_URL = 'https://enu-tools.pages.dev/help/';
+    const HELP_OPEN_NEW_TAB = true;
+    (function(){const l=document.getElementById('help-page-link');if(!l)return;l.href=HELP_URL;if(HELP_OPEN_NEW_TAB){l.target='_blank';l.rel='noopener'}})();
+    const NOTICE_KEY = 'enu_notice_minimized';
+    function getNoticeList(){try{return JSON.parse(localStorage.getItem(NOTICE_KEY)||'[]')}catch(e){return[]}}
+    function saveNoticeList(l){try{localStorage.setItem(NOTICE_KEY,JSON.stringify(l))}catch(e){}}
+    (function(){const l=getNoticeList();document.querySelectorAll('.notice-wrap[data-notice-id]').forEach(w=>{if(l.includes(w.dataset.noticeId))w.classList.add('is-mini')})})();
+    document.querySelectorAll('.notice-wrap .close-btn').forEach(b=>b.addEventListener('click',()=>{const w=b.closest('.notice-wrap'),i=w.dataset.noticeId;w.classList.add('is-mini');const l=getNoticeList();if(!l.includes(i)){l.push(i);saveNoticeList(l)}}));
+    document.querySelectorAll('.notice-mini').forEach(m=>m.addEventListener('click',()=>{const w=m.closest('.notice-wrap'),i=w.dataset.noticeId;w.classList.remove('is-mini');saveNoticeList(getNoticeList().filter(x=>x!==i))}));
+
+    // ─── toolbar ───
+    function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+    async function handleShare(){
+        const shareData={title:document.title,text:`${document.title} を共有します`,url:location.href};
+        if(navigator.share){try{await navigator.share(shareData)}catch(e){}}
+        else{try{await navigator.clipboard.writeText(location.href);toast('🔗 URLをコピーしました')}catch(e){toast('共有に対応していない環境です')}}
+    }
+    document.getElementById('btn-share')?.addEventListener('click', handleShare);
 </script>
 </body>
 </html>
