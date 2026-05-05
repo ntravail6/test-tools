@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>経費判定＆メール送信</title>
+    <title>カフェ経費判定</title>
+
+    <!-- favicon (SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23f5f0eb'/><text x='16' y='24' font-size='20' text-anchor='middle'>☕</text></svg>">
+
+    <!-- PWA / ホーム画面追加 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="カフェ経費判定">
+    <link rel="apple-touch-icon" id="apple-touch-icon">
+    <link rel="manifest" id="pwa-manifest">
+
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -592,6 +603,55 @@
         else{try{await navigator.clipboard.writeText(location.href);toast('🔗 URLをコピーしました')}catch(e){toast('共有に対応していない環境です')}}
     }
     document.getElementById('btn-share')?.addEventListener('click', handleShare);
+
+    // ─── PWA icons ───
+    (function(){
+        const BG = '#f5f0eb';
+        const EMOJI = '☕';
+        const SIZES = [192, 512];
+
+        function makeCanvas(size) {
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const ctx = c.getContext('2d');
+            const r = size * 0.18;
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.arcTo(size, 0, size, size, r);
+            ctx.arcTo(size, size, 0, size, r);
+            ctx.arcTo(0, size, 0, 0, r);
+            ctx.arcTo(0, 0, size, 0, r);
+            ctx.closePath();
+            ctx.fillStyle = BG;
+            ctx.fill();
+            ctx.font = `${size * 0.58}px serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(EMOJI, size / 2, size / 2 * 1.05);
+            return c;
+        }
+
+        // apple-touch-icon (180px)
+        const appleCanvas = makeCanvas(180);
+        document.getElementById('apple-touch-icon').href = appleCanvas.toDataURL('image/png');
+
+        // PWA manifest with icons
+        const icons = SIZES.map(s => {
+            const url = makeCanvas(s).toDataURL('image/png');
+            return { src: url, sizes: `${s}x${s}`, type: 'image/png', purpose: 'any maskable' };
+        });
+        const manifest = {
+            name: 'カフェ経費判定',
+            short_name: 'カフェ経費',
+            start_url: location.href,
+            display: 'standalone',
+            background_color: BG,
+            theme_color: BG,
+            icons
+        };
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+    })();
 </script>
 </body>
 </html>
