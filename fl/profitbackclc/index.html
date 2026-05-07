@@ -4,7 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="format-detection" content="telephone=no">
-  <title>🔁 逆引き価格計算シミュレーター</title>
+  <title>逆引き価格計算シミュレーター</title>
+
+  <!-- ── Favicon (SVG inline data URI) ── -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23f0f7fc'/><text y='.9em' font-size='78' x='50%' dominant-baseline='middle' text-anchor='middle' dy='0.05em'>🔁</text></svg>">
+
+  <!-- ── apple-touch-icon & PWA manifest (Canvas生成) ── -->
+  <link rel="apple-touch-icon" id="apple-touch-icon-link">
+  <link rel="manifest"         id="pwa-manifest-link">
+  <meta name="apple-mobile-web-app-capable"          content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title"            content="逆引き計算">
+  <meta name="theme-color"                           content="#f0f7fc">
+
+  <script>
+  (function(){
+    const EMOJI   = '🔁';
+    const BG      = '#f0f7fc';
+    const RADIUS  = 0.18; // 角丸比率
+
+    function makeIcon(size){
+      const c  = document.createElement('canvas');
+      c.width  = size;
+      c.height = size;
+      const ctx = c.getContext('2d');
+      const r   = size * RADIUS;
+      // 角丸背景
+      ctx.beginPath();
+      ctx.moveTo(r, 0);
+      ctx.lineTo(size - r, 0);
+      ctx.quadraticCurveTo(size, 0, size, r);
+      ctx.lineTo(size, size - r);
+      ctx.quadraticCurveTo(size, size, size - r, size);
+      ctx.lineTo(r, size);
+      ctx.quadraticCurveTo(0, size, 0, size - r);
+      ctx.lineTo(0, r);
+      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.closePath();
+      ctx.fillStyle = BG;
+      ctx.fill();
+      // 絵文字
+      ctx.font      = (size * 0.58) + 'px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(EMOJI, size / 2, size / 2);
+      return c;
+    }
+
+    // apple-touch-icon (180px)
+    const apple = makeIcon(180);
+    const appleEl = document.getElementById('apple-touch-icon-link');
+    if(appleEl) appleEl.href = apple.toDataURL('image/png');
+
+    // PWA manifest
+    const i192 = makeIcon(192);
+    const i512 = makeIcon(512);
+    const manifest = {
+      name:             '逆引き価格計算シミュレーター',
+      short_name:       '逆引き計算',
+      start_url:        './',
+      display:          'standalone',
+      background_color: BG,
+      theme_color:      BG,
+      icons: [
+        { src: i192.toDataURL('image/png'), sizes: '192x192', type: 'image/png' },
+        { src: i512.toDataURL('image/png'), sizes: '512x512', type: 'image/png' }
+      ]
+    };
+    const blob   = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const mfEl   = document.getElementById('pwa-manifest-link');
+    if(mfEl) mfEl.href = URL.createObjectURL(blob);
+  })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +111,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       background: var(--bg-soft);
       color: var(--text-main);
       min-height: 100vh;
@@ -57,7 +129,7 @@
     .slider-ends,
     .rate-badge,
     .hist-main strong {
-      font-family: 'Quicksand', 'Arial Rounded MT Bold', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     /* ════════════════════════════════
@@ -66,7 +138,10 @@
     .wrapper {
       max-width: 960px;
       margin: 0 auto;
-      padding: 0 16px 40px;
+      padding: 0 24px 40px;
+    }
+    @media (max-width: 650px) {
+      .wrapper { padding: 0 16px 40px; }
     }
 
     /* ════════════════════════════════
@@ -80,19 +155,26 @@
     .header-inner {
       max-width: 960px;
       margin: 0 auto;
-      padding: 16px 16px 10px;
+      padding: 16px 24px 10px;
+    }
+    @media (max-width: 650px) {
+      .header-inner { padding: 16px 16px 10px; }
     }
     .site-title {
-      font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
-      font-size: 1.45rem;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--main);
       letter-spacing: 0.03em;
       margin-bottom: 4px;
     }
     .site-subtitle {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--sub);
+    }
+    @media (max-width: 650px) {
+      .site-title    { font-size: 1.25rem; }
+      .site-subtitle { font-size: 0.7rem; }
     }
 
     /* Warning banner */
@@ -175,11 +257,11 @@
       transition: border-color 0.2s;
     }
     select {
-      font-family: 'Kosugi Maru', 'Arial Rounded MT Bold', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-size: 0.88rem;
     }
     input[type="number"] {
-      font-family: 'Quicksand', 'Arial Rounded MT Bold', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     select:focus, input:focus { border-color: var(--main); }
     input:disabled { background: #f8fafc; color: #cbd5e1; }
@@ -261,7 +343,7 @@
       cursor: pointer;
       color: var(--text-muted);
       transition: 0.2s;
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .mode-tab.active {
       background: var(--sub-bg);
@@ -287,7 +369,7 @@
       color: var(--text-muted);
       text-align: center;
       transition: 0.2s;
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .preset-btn.active {
       background: var(--sub-bg);
@@ -302,7 +384,7 @@
       font-size: 0.72rem;
       color: var(--sub);
       text-align: center;
-      font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     @keyframes flashInput {
@@ -319,7 +401,7 @@
       border-radius: 8px;
       cursor: pointer;
       padding: 3px 10px;
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     /* ════════════════════════════════
@@ -334,7 +416,7 @@
     }
     .result-label { font-size: 0.75rem; color: var(--sub); margin-bottom: 4px; }
     .result-price {
-      font-family: 'Quicksand', 'Arial Rounded MT Bold', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-size: 3rem;
       font-weight: 700;
       line-height: 1;
@@ -416,7 +498,7 @@
     }
     .detail-tbl td:last-child {
       text-align: right;
-      font-family: 'Quicksand', 'Arial Rounded MT Bold', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .detail-tbl .sub-row td {
       font-size: 0.7rem;
@@ -482,7 +564,7 @@
       font-size: 0.8rem;
       color: var(--text-muted);
       cursor: pointer;
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .btn-save {
       background: var(--sub-bg);
@@ -493,7 +575,7 @@
       color: var(--main);
       cursor: pointer;
       font-weight: bold;
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     /* ════════════════════════════════
@@ -515,7 +597,7 @@
       font-size: 0.72rem;
       color: var(--sub);
       border-bottom: 2px solid var(--border);
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .cmp-table td {
       padding: 10px 10px;
@@ -600,7 +682,7 @@
       border-radius: 8px;
       cursor: pointer;
       padding: 4px 10px;
-      font-family: 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     /* localStorage note */
@@ -620,22 +702,64 @@
     ════════════════════════════════ */
     .site-footer {
       text-align: center;
-      padding: 24px 16px 20px;
+      margin-top: 4px;
+      padding: 0 0 24px;
       font-size: 10px;
       color: var(--sub);
       opacity: 0.7;
       letter-spacing: 0.1em;
-      font-family: 'Quicksand', 'Kosugi Maru', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .site-footer::before {
       content: '';
       display: block;
-      width: 40px;
+      width: 100%;
+      max-width: 960px;
       height: 1px;
       background: var(--sub);
       opacity: 0.5;
-      margin: 0 auto 10px;
+      margin: 0 auto 16px;
     }
+    /* ════════════════════════════════
+       NOTICE CARDS
+    ════════════════════════════════ */
+    .notice-area{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    .notice-wrap{width:100%}
+    .notice-wrap.is-mini{width:auto}
+    .notice-wrap > .notice{display:flex}
+    .notice-wrap > .notice-mini{display:none}
+    .notice-wrap.is-mini > .notice{display:none}
+    .notice-wrap.is-mini > .notice-mini{display:inline-flex}
+    .notice{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.75;gap:8px;align-items:flex-start;border:1px solid}
+    .notice .icon{font-size:.95rem;line-height:1.4;flex-shrink:0}
+    .notice .body{flex:1;min-width:0}
+    .notice .close-btn{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;flex-shrink:0;background:transparent;border:none;cursor:pointer;font-size:1rem;line-height:1;padding:4px 6px;margin:-4px -6px -4px 0;opacity:.45;color:inherit;transition:opacity .15s}
+    .notice .close-btn:hover{opacity:1}
+    .notice-mini{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;width:30px;height:30px;border-radius:50%;border:1px solid;cursor:pointer;font-size:.85rem;line-height:1;padding:0;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+    .notice-mini:hover{transform:scale(1.08);box-shadow:0 1px 4px rgba(0,0,0,.10)}
+    .notice-info,.notice-mini-info{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
+    .notice-warn,.notice-mini-warn{background:#fef6df;border-color:#f0d896;color:#8a5a14}
+    .notice-disclaim,.notice-mini-disclaim{background:#faecec;border-color:#e8c8c8;color:#804a52}
+    .notice-trade,.notice-mini-trade{background:#faecec;border-color:#e8c8c8;color:#804a52}
+    .notice-date,.notice-mini-date{background:#f5f1e8;border-color:#e0d6bf;color:#6b5a3d}
+    .notice-help,.notice-mini-help{background:#eef2ec;border-color:#c8d3c1;color:#4a5d44}
+    .notice-help .help-link{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;color:#344230;text-decoration:underline;text-underline-offset:2px;font-weight:700;font-size:.78rem;white-space:nowrap;margin-left:4px}
+    .notice-help .help-link:hover{color:#1f2c1c}
+
+    /* ════════════════════════════════
+       TOOLBAR
+    ════════════════════════════════ */
+    .fc-pdf  {background:#fef0f0;border-color:#f0c8c8;color:#804a52}
+    .fc-print{background:#f0f1f3;border-color:#c8cdd4;color:#525860}
+    .fc-share{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
+    .fc-json {background:#f5f1e8;border-color:#d8cdaa;color:#6b5a3d}
+    .btn-card{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;flex:1 1 80px;min-width:80px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;padding:13px 6px 11px;border-radius:10px;border:1px solid;cursor:pointer;gap:2px}
+    .btn-card .icon{font-size:1.3rem;line-height:1}
+    .btn-card .label{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-size:.62rem;font-weight:700;text-align:center;color:inherit;line-height:1.2}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:16px 14px;background:#fff;border:1px solid #ece5d6;border-radius:10px;align-items:center;margin-bottom:6px}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d2820;color:#fff;padding:10px 18px;border-radius:999px;font-size:.78rem;font-weight:700;font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media print{.toolbar,.toast,.notice-area{display:none !important}}
   </style>
 </head>
 <body>
@@ -648,15 +772,80 @@
     <h1 class="site-title">🔁 逆引き価格計算シミュレーター</h1>
     <p class="site-subtitle">希望する純利益から、フリマサイトの最低出品価格を自動計算します</p>
   </div>
-  <div class="warn-banner">
-    <div class="warn-banner-inner">
-      ⚠️ 計算結果は目安です。手数料・送料は各サービスの最新情報をご確認ください。実際の取引における損失について、当サイトは責任を負いません。
-    </div>
-  </div>
+
 </header>
+
+<!-- ════════════════════════════════════════
+     NOTICE CARDS（ヘッダー直後）
+════════════════════════════════════════ -->
+<div class="wrapper" style="padding-top:16px;padding-bottom:0">
+<div class="notice-area">
+  <div class="notice-wrap" data-notice-id="info">
+    <div class="notice notice-info">
+      <span class="icon">💾</span>
+      <span class="body">データはお使いの端末・ブラウザの中にのみ保存されます。サーバーには送信されないので、安心してご利用いただけます。</span>
+      <button type="button" class="close-btn" aria-label="最小化">×</button>
+    </div>
+    <button type="button" class="notice-mini notice-mini-info" aria-label="案内を表示" title="案内を表示">💾</button>
+  </div>
+  <div class="notice-wrap" data-notice-id="warn">
+    <div class="notice notice-warn">
+      <span class="icon">⚠️</span>
+      <span class="body">ブラウザのデータ削除、他端末・他ブラウザでの閲覧、シークレットモードでのご利用では、データが失われたり引き継げない場合があります。重要な情報はJSONバックアップでの保存を推奨します。</span>
+      <button type="button" class="close-btn" aria-label="最小化">×</button>
+    </div>
+    <button type="button" class="notice-mini notice-mini-warn" aria-label="注意を表示" title="注意を表示">⚠️</button>
+  </div>
+  <div class="notice-wrap" data-notice-id="disclaim">
+    <div class="notice notice-disclaim">
+      <span class="icon">🚨</span>
+      <span class="body">本ツールの判定は一般的な目安です。実際の経費処理は社内規定や税法により異なるため、税理士にご確認ください。</span>
+      <button type="button" class="close-btn" aria-label="最小化">×</button>
+    </div>
+    <button type="button" class="notice-mini notice-mini-disclaim" aria-label="免責事項を表示" title="免責事項を表示">🚨</button>
+  </div>
+  <div class="notice-wrap" data-notice-id="trade">
+    <div class="notice notice-trade">
+      <span class="icon">🚨</span>
+      <span class="body">計算結果は目安です。実際の取引における最終判断はご自身でお願いいたします。取引結果について責任を負いかねますのでご了承ください。</span>
+      <button type="button" class="close-btn" aria-label="最小化">×</button>
+    </div>
+    <button type="button" class="notice-mini notice-mini-trade" aria-label="取引の免責を表示" title="取引の免責を表示">🚨</button>
+  </div>
+  <div class="notice-wrap" data-notice-id="date">
+    <div class="notice notice-date">
+      <span class="icon">📅</span>
+      <span class="body">掲載情報は <strong>2026年3月時点</strong> のものです。最新情報は公式サイト等でご確認ください。</span>
+      <button type="button" class="close-btn" aria-label="最小化">×</button>
+    </div>
+    <button type="button" class="notice-mini notice-mini-date" aria-label="情報の時点を表示" title="情報の時点を表示">📅</button>
+  </div>
+  <div class="notice-wrap" data-notice-id="help">
+    <div class="notice notice-help">
+      <span class="icon">📚</span>
+      <span class="body">使い方・FAQ・トラブル対応は<a href="" class="help-link" id="help-page-link">こちらから</a></span>
+      <button type="button" class="close-btn" aria-label="最小化">×</button>
+    </div>
+    <button type="button" class="notice-mini notice-mini-help" aria-label="ヘルプを表示" title="ヘルプを表示">📚</button>
+  </div>
+</div>
+</div>
 
 <!-- BLOCK 2 + 3 (React mount) -->
 <div id="root"></div>
+
+<!-- ════════════════════════════════════════
+     TOOLBAR（フッター直前）
+════════════════════════════════════════ -->
+<div class="wrapper" style="padding-top:0;padding-bottom:0">
+  <div class="toolbar">
+    <button class="btn-card fc-pdf"   id="btn-pdf">  <span class="icon">📄</span><span class="label">PDF出力</span></button>
+    <button class="btn-card fc-print" id="btn-print"><span class="icon">🖨</span> <span class="label">印刷</span></button>
+    <button class="btn-card fc-share" id="btn-share"><span class="icon">🔗</span><span class="label">共有</span></button>
+    <button class="btn-card fc-json"  id="btn-export"><span class="icon">📤</span><span class="label">エクスポート</span></button>
+    <button class="btn-card fc-json"  id="btn-import"><span class="icon">📥</span><span class="label">インポート</span></button>
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════
      BLOCK 4: FOOTER
@@ -664,6 +853,9 @@
 <footer class="site-footer">
   © 2026 enu(エヌ) All rights reserved.
 </footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script type="text/babel">
 const { useState, useEffect } = React;
@@ -944,11 +1136,6 @@ function App() {
 
   return (
     <div className="wrapper">
-      {/* localStorage note */}
-      <div className="storage-note">
-        💾 入力内容と計算履歴はこのブラウザのlocalStorageに自動保存されます。別のブラウザや端末では引き継がれません。
-      </div>
-
       {/* ════════════════════════════════
           BLOCK 2: MAIN GRID
           左: 入力カード / 右: 結果カード
@@ -1279,11 +1466,11 @@ function App() {
             <div key={e.id} className="hist-item" onClick={() => restoreHist(e)}>
               <div className="hist-meta">{e.date} · {e.site}</div>
               <div className="hist-main">
-                希望 ¥{Number(e.desiredProfit).toLocaleString()} →{' '}
+                希望 <span className="num">¥{Number(e.desiredProfit).toLocaleString()}</span> →{' '}
                 <strong style={{ color:'var(--main)' }}>
-                  出品 ¥{Number(e.price).toLocaleString()}
+                  出品 <span className="num">¥{Number(e.price).toLocaleString()}</span>
                 </strong>
-                <span style={{ fontSize:'0.72rem', color:'var(--sub)', marginLeft:'5px' }}>
+                <span className="num" style={{ fontSize:'0.72rem', color:'var(--sub)', marginLeft:'5px' }}>
                   ({e.profitRate}%)
                 </span>
               </div>
@@ -1297,6 +1484,129 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<!-- ════════════════════════════════════════
+     VANILLA JS: Notice Cards + Toolbar
+════════════════════════════════════════ -->
+<script>
+/* ── ヘルプリンク ── */
+const HELP_URL = 'https://enu-tools.pages.dev/help/';
+const HELP_OPEN_NEW_TAB = true;
+(function(){
+  const l = document.getElementById('help-page-link');
+  if (!l) return;
+  l.href = HELP_URL;
+  if (HELP_OPEN_NEW_TAB){ l.target = '_blank'; l.rel = 'noopener'; }
+})();
+
+/* ── Notice Cards ── */
+const NOTICE_KEY = 'enu_notice_minimized';
+function getNoticeList(){ try{ return JSON.parse(localStorage.getItem(NOTICE_KEY) || '[]'); }catch(e){ return []; } }
+function saveNoticeList(l){ try{ localStorage.setItem(NOTICE_KEY, JSON.stringify(l)); }catch(e){} }
+(function(){
+  const l = getNoticeList();
+  document.querySelectorAll('.notice-wrap[data-notice-id]').forEach(w => {
+    if (l.includes(w.dataset.noticeId)) w.classList.add('is-mini');
+  });
+})();
+document.querySelectorAll('.notice-wrap .close-btn').forEach(b => b.addEventListener('click', () => {
+  const w = b.closest('.notice-wrap'), i = w.dataset.noticeId;
+  w.classList.add('is-mini');
+  const l = getNoticeList();
+  if (!l.includes(i)){ l.push(i); saveNoticeList(l); }
+}));
+document.querySelectorAll('.notice-mini').forEach(m => m.addEventListener('click', () => {
+  const w = m.closest('.notice-wrap'), i = w.dataset.noticeId;
+  w.classList.remove('is-mini');
+  saveNoticeList(getNoticeList().filter(x => x !== i));
+}));
+
+/* ── Toast ── */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ── アプリデータ操作 ── */
+function getAppData(){
+  return {
+    inputs:  JSON.parse(localStorage.getItem('rpc_inputs_v3')  || 'null'),
+    history: JSON.parse(localStorage.getItem('rpc_history_v3') || '[]')
+  };
+}
+function validateData(data){
+  return data && typeof data === 'object' && ('inputs' in data || 'history' in data);
+}
+function applyAppData(data){
+  if (data.inputs)  localStorage.setItem('rpc_inputs_v3',  JSON.stringify(data.inputs));
+  if (data.history) localStorage.setItem('rpc_history_v3', JSON.stringify(data.history));
+  location.reload();
+}
+
+/* ── Toolbar ハンドラ ── */
+function handlePrint(){ window.print(); }
+
+async function handleShare(){
+  const shareData = {
+    title: document.title,
+    text: document.title + ' を共有します',
+    url: location.href
+  };
+  if (navigator.share){
+    try{ await navigator.share(shareData); } catch(e){}
+  } else {
+    try{
+      await navigator.clipboard.writeText(location.href);
+      toast('🔗 URLをコピーしました');
+    } catch(e){ toast('共有に対応していない環境です'); }
+  }
+}
+
+function handleExport(){
+  const data = getAppData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  const date = new Date().toISOString().slice(0, 10);
+  a.download = document.title + '_' + date + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📤 JSONをダウンロードしました');
+}
+
+function handleImport(){
+  const input = document.createElement('input');
+  input.type   = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!validateData(data)) throw new Error('データ形式が違います');
+      if (!confirm('現在のデータを上書きしてインポートしますか？')) return;
+      applyAppData(data);
+      toast('📥 インポートしました');
+    } catch(err){
+      toast('⚠️ ファイルが読み込めません');
+    }
+  });
+  input.click();
+}
+
+document.getElementById('btn-pdf')?.addEventListener('click', handlePrint);
+document.getElementById('btn-print')?.addEventListener('click', handlePrint);
+document.getElementById('btn-share')?.addEventListener('click', handleShare);
+document.getElementById('btn-export')?.addEventListener('click', handleExport);
+document.getElementById('btn-import')?.addEventListener('click', handleImport);
 </script>
 </body>
 </html>
