@@ -3,7 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>📦 送料計算シミュレーター</title>
+  <title>送料計算シミュレーター</title>
+
+  <!-- ── Favicon (SVG inline) ── -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23fdf8f8'/%3E%3Ctext y='.9em' font-size='85' text-anchor='middle' x='50'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E">
+
+  <!-- ── PWA / Apple Touch Icon (Canvas生成) ── -->
+  <script>
+  (function(){
+    const EMOJI   = '\u{1F4E6}';
+    const BG      = '#fdf8f8';
+    const APPNAME = '送料計算シミュレーター';
+    const SHORT   = '送料計算';
+
+    function makeCanvas(size){
+      const c   = document.createElement('canvas');
+      c.width   = size; c.height = size;
+      const ctx = c.getContext('2d');
+      const r   = size * 0.18;
+      ctx.beginPath();
+      ctx.moveTo(r,0); ctx.lineTo(size-r,0);
+      ctx.quadraticCurveTo(size,0,size,r);
+      ctx.lineTo(size,size-r);
+      ctx.quadraticCurveTo(size,size,size-r,size);
+      ctx.lineTo(r,size);
+      ctx.quadraticCurveTo(0,size,0,size-r);
+      ctx.lineTo(0,r);
+      ctx.quadraticCurveTo(0,0,r,0);
+      ctx.closePath();
+      ctx.fillStyle = BG; ctx.fill();
+      ctx.font = size*0.62+'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(EMOJI, size/2, size/2*1.05);
+      return c;
+    }
+
+    // apple-touch-icon 180px
+    const appleLink = document.createElement('link');
+    appleLink.rel  = 'apple-touch-icon';
+    appleLink.href = makeCanvas(180).toDataURL('image/png');
+    document.head.appendChild(appleLink);
+
+    // PWA manifest
+    function dataURLtoBlob(d){
+      const [h,b] = d.split(',');
+      const mime  = h.match(/:(.*?);/)[1];
+      const bin   = atob(b);
+      const arr   = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+      return new Blob([arr],{type:mime});
+    }
+    const manifest = {
+      name: APPNAME, short_name: SHORT,
+      start_url: './', display: 'standalone',
+      background_color: BG, theme_color: BG,
+      icons:[
+        {src:URL.createObjectURL(dataURLtoBlob(makeCanvas(192).toDataURL('image/png'))),sizes:'192x192',type:'image/png'},
+        {src:URL.createObjectURL(dataURLtoBlob(makeCanvas(512).toDataURL('image/png'))),sizes:'512x512',type:'image/png'}
+      ]
+    };
+    const mLink = document.createElement('link');
+    mLink.rel   = 'manifest';
+    mLink.href  = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+    document.head.appendChild(mLink);
+
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color'; meta.content = BG;
+    document.head.appendChild(meta);
+  })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
@@ -34,7 +102,7 @@
     * { box-sizing: border-box; }
 
     body {
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       background: var(--bg-soft);
       color: var(--text-main);
       margin: 0;
@@ -51,7 +119,7 @@
       font-size: 0.75rem;
       color: #5f4c00;
       text-align: center;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       position: sticky;
       top: 0;
       z-index: 200;
@@ -62,9 +130,13 @@
        Page Wrapper — max 960px (requirement 1)
     ══════════════════════════════════════ */
     .page-wrapper {
+      width: 100%;
       max-width: 960px;
       margin: 0 auto;
-      padding: 0 16px 0;
+      padding: 0 16px;
+    }
+    @media (min-width: 651px) and (max-width: 960px) {
+      .page-wrapper { padding: 0 24px; }
     }
 
     /* ══════════════════════════════════════
@@ -77,15 +149,15 @@
       margin-bottom: 22px;
     }
     .site-header h1 {
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-weight: 700;
-      font-size: 1.55rem;
+      font-size: 1.5rem;
       color: var(--main-pink);
       margin: 0 0 4px;
       letter-spacing: 0.04em;
     }
     .site-header .tagline {
-      font-size: 0.73rem;
+      font-size: 0.75rem;
       color: var(--sub);
       letter-spacing: 0.02em;
     }
@@ -137,7 +209,7 @@
       border-radius: var(--radius-sm);
       border: 1px solid #eee;
       font-size: 0.95rem;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       margin-bottom: 12px;
       background: white;
       outline: none;
@@ -208,7 +280,7 @@
       font-size: 0.65rem;
       color: #bbb;
       margin-bottom: 12px;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     /* ══════════════════════════════════════
@@ -229,7 +301,7 @@
       cursor: pointer;
       color: var(--sub);
       transition: 0.2s;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .mode-tab.active {
       background: #fdf0f1;
@@ -254,7 +326,7 @@
       text-align: center;
       transition: 0.2s;
       line-height: 1.3;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .preset-btn.active {
       background: #fdf0f1;
@@ -270,7 +342,7 @@
       color: var(--sub);
       text-align: center;
       margin-bottom: 4px;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     @keyframes flashInput { 0%,100%{background:white} 50%{background:#fdf0f1} }
     .flash { animation: flashInput 0.5s ease; }
@@ -288,7 +360,7 @@
     .profit-val {
       font-size: 2.4rem;
       font-weight: 700;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       line-height: 1.15;
     }
     .method-badge {
@@ -308,7 +380,7 @@
       font-weight: bold;
       margin-left: 6px;
       vertical-align: middle;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .approx-note { font-size: 0.65rem; color: #f44336; margin-top: 2px; }
     .spec-card {
@@ -347,7 +419,7 @@
       justify-content: space-between;
       margin-bottom: 5px;
       align-items: baseline;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .detail-sub {
       font-size: 0.72rem;
@@ -356,14 +428,14 @@
       margin-bottom: 4px;
       display: flex;
       justify-content: space-between;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .formula {
       font-size: 0.65rem;
       color: #999;
       display: block;
       margin-top: 1px;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .btn-row {
       display: grid;
@@ -379,7 +451,7 @@
       font-size: 0.8rem;
       color: #666;
       cursor: pointer;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .btn-save {
       background: #fdf0f1;
@@ -390,7 +462,7 @@
       color: var(--main-pink);
       cursor: pointer;
       font-weight: bold;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .reset-btn {
       font-size: 0.72rem;
@@ -400,7 +472,7 @@
       border-radius: var(--radius-sm);
       cursor: pointer;
       padding: 4px 10px;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .grid-2 {
       display: grid;
@@ -444,7 +516,7 @@
       gap: 4px;
     }
     .summary-head-title {
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-weight: 700;
       font-size: 0.88rem;
       color: var(--text-main);
@@ -467,7 +539,7 @@
       background: #fdf8f8;
       font-size: 0.7rem;
       color: var(--sub);
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -486,12 +558,12 @@
     }
     .td-site { font-weight: bold; }
     .td-profit {
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-weight: 700;
       font-size: 1.05rem;
     }
     .td-rate {
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       font-weight: 600;
       font-size: 0.85rem;
     }
@@ -507,7 +579,7 @@
       font-size: 0.6rem;
       padding: 2px 8px;
       border-radius: 10px;
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
     .cmp-badge.current { background: #90a4ae; }
 
@@ -529,8 +601,8 @@
     .cmp-cell.is-best    { border-color: var(--main-pink); background: #fdf0f1; }
     .cmp-cell.is-current { box-shadow: 0 0 0 2px var(--main-pink); }
     .cmp-site   { font-size: 0.7rem; font-weight: bold; color: var(--sub); margin-bottom: 3px; }
-    .cmp-profit { font-size: 1.1rem; font-weight: bold; line-height: 1.1; font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif; }
-    .cmp-rate   { font-size: 0.7rem; font-weight: bold; margin: 2px 0; font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif; }
+    .cmp-profit { font-size: 1.1rem; font-weight: bold; line-height: 1.1; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
+    .cmp-rate   { font-size: 0.7rem; font-weight: bold; margin: 2px 0; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
     .cmp-method { font-size: 0.6rem; color: var(--sub); margin-top: 3px; line-height: 1.3; }
 
     /* Show / hide by screen width (requirement 2) */
@@ -558,8 +630,8 @@
     }
     .hist-item:hover { background: #fafafa; }
     .hist-meta   { font-size: 0.68rem; color: #bbb; margin-bottom: 2px; }
-    .hist-main   { font-size: 0.85rem; font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif; }
-    .hist-rate   { font-size: 0.72rem; color: #aaa; margin-left: 5px; font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif; }
+    .hist-main   { font-size: 0.85rem; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
+    .hist-rate   { font-size: 0.72rem; color: #aaa; margin-left: 5px; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
     .hist-method { font-size: 0.68rem; color: var(--sub); margin-top: 1px; }
     .clear-btn {
       font-size: 0.72rem;
@@ -569,7 +641,7 @@
       border-radius: var(--radius-sm);
       cursor: pointer;
       padding: 4px 10px;
-      font-family: 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
     }
 
     /* ══════════════════════════════════════
@@ -596,7 +668,7 @@
       font-size: 10px;
       opacity: 0.7;
       color: var(--sub);
-      font-family: 'Quicksand', 'Kosugi Maru', 'Arial Rounded MT', sans-serif;
+      font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;
       letter-spacing: 0.1em;
     }
 
@@ -611,15 +683,53 @@
       .pc-only     { display: none  !important; }
       .mobile-only { display: block !important; }
       .priority-grid { grid-template-columns: 1fr 1fr; }
+      .site-header h1   { font-size: 1.25rem; }
+      .site-header .tagline { font-size: 0.7rem; }
     }
+
+    /* ══════════════════════════════════════
+       Notice Area
+    ══════════════════════════════════════ */
+    .notice-area{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+    .notice-wrap{width:100%}
+    .notice-wrap.is-mini{width:auto}
+    .notice-wrap > .notice{display:flex}
+    .notice-wrap > .notice-mini{display:none}
+    .notice-wrap.is-mini > .notice{display:none}
+    .notice-wrap.is-mini > .notice-mini{display:inline-flex}
+    .notice{font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.75;gap:8px;align-items:flex-start;border:1px solid}
+    .notice .icon{font-size:.95rem;line-height:1.4;flex-shrink:0}
+    .notice .body{flex:1;min-width:0}
+    .notice .close-btn{font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;flex-shrink:0;background:transparent;border:none;cursor:pointer;font-size:1rem;line-height:1;padding:4px 6px;margin:-4px -6px -4px 0;opacity:.45;color:inherit;transition:opacity .15s}
+    .notice .close-btn:hover{opacity:1}
+    .notice-mini{font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;width:30px;height:30px;border-radius:50%;border:1px solid;cursor:pointer;font-size:.85rem;line-height:1;padding:0;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+    .notice-mini:hover{transform:scale(1.08);box-shadow:0 1px 4px rgba(0,0,0,.10)}
+    .notice-info,.notice-mini-info{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
+    .notice-warn,.notice-mini-warn{background:#fef6df;border-color:#f0d896;color:#8a5a14}
+    .notice-disclaim,.notice-mini-disclaim{background:#faecec;border-color:#e8c8c8;color:#804a52}
+    .notice-trade,.notice-mini-trade{background:#faecec;border-color:#e8c8c8;color:#804a52}
+    .notice-date,.notice-mini-date{background:#f5f1e8;border-color:#e0d6bf;color:#6b5a3d}
+    .notice-help,.notice-mini-help{background:#eef2ec;border-color:#c8d3c1;color:#4a5d44}
+    .notice-help .help-link{font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;color:#344230;text-decoration:underline;text-underline-offset:2px;font-weight:700;font-size:.78rem;white-space:nowrap;margin-left:4px}
+    .notice-help .help-link:hover{color:#1f2c1c}
+
+    /* ══════════════════════════════════════
+       Toolbar
+    ══════════════════════════════════════ */
+    .fc-pdf{background:#fef0f0;border-color:#f0c8c8;color:#804a52}
+    .fc-print{background:#f0f1f3;border-color:#c8cdd4;color:#525860}
+    .fc-share{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
+    .fc-json{background:#f5f1e8;border-color:#d8cdaa;color:#6b5a3d}
+    .btn-card{font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;flex:1 1 80px;min-width:80px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;padding:13px 6px 11px;border-radius:10px;border:1px solid;cursor:pointer;gap:2px}
+    .btn-card .icon{font-size:1.3rem;line-height:1}
+    .btn-card .label{font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;font-size:.62rem;font-weight:700;text-align:center;color:inherit;line-height:1.2}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:16px 14px;background:#fff;border:1px solid #ece5d6;border-radius:10px;align-items:center;margin-bottom:6px}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d2820;color:#fff;padding:10px 18px;border-radius:999px;font-size:.78rem;font-weight:700;font-family:'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media print{.toolbar,.toast,.disclaimer,.site-header .tagline{display:none !important}}
   </style>
 </head>
 <body>
-
-<!-- ── Disclaimer Banner (requirement 5) ── -->
-<div class="disclaimer">
-  ⚠️ 本ツールの送料・手数料は目安です。最新料金は各サービスの公式サイトでご確認ください。
-</div>
 
 <div class="page-wrapper">
 
@@ -630,7 +740,68 @@
   </header>
 
   <!-- ── React Root (Main Card + Summary Bar) ── -->
+  <!-- ── Notice Area (patterns ①②⑤⑥) ── -->
+  <div class="notice-area">
+    <div class="notice-wrap" data-notice-id="info">
+      <div class="notice notice-info">
+        <span class="icon">💾</span>
+        <span class="body">データはお使いの端末・ブラウザの中にのみ保存されます。サーバーには送信されないので、安心してご利用いただけます。</span>
+        <button type="button" class="close-btn" aria-label="最小化">×</button>
+      </div>
+      <button type="button" class="notice-mini notice-mini-info" aria-label="案内を表示" title="案内を表示">💾</button>
+    </div>
+    <div class="notice-wrap" data-notice-id="warn">
+      <div class="notice notice-warn">
+        <span class="icon">⚠️</span>
+        <span class="body">ブラウザのデータ削除、他端末・他ブラウザでの閲覧、シークレットモードでのご利用では、データが失われたり引き継げない場合があります。重要な情報はJSONバックアップでの保存を推奨します。</span>
+        <button type="button" class="close-btn" aria-label="最小化">×</button>
+      </div>
+      <button type="button" class="notice-mini notice-mini-warn" aria-label="注意を表示" title="注意を表示">⚠️</button>
+    </div>
+    <div class="notice-wrap" data-notice-id="disclaim">
+      <div class="notice notice-disclaim">
+        <span class="icon">🚨</span>
+        <span class="body">本ツールの計算結果はあくまで目安です。実際の送料・手数料は商品の状態・梱包方法・発送タイミング等により異なる場合があります。</span>
+        <button type="button" class="close-btn" aria-label="最小化">×</button>
+      </div>
+      <button type="button" class="notice-mini notice-mini-disclaim" aria-label="免責事項を表示" title="免責事項を表示">🚨</button>
+    </div>
+    <div class="notice-wrap" data-notice-id="trade">
+      <div class="notice notice-trade">
+        <span class="icon">🚨</span>
+        <span class="body">計算結果は目安です。実際の取引における最終判断はご自身でお願いいたします。取引結果について責任を負いかねますのでご了承ください。</span>
+        <button type="button" class="close-btn" aria-label="最小化">×</button>
+      </div>
+      <button type="button" class="notice-mini notice-mini-trade" aria-label="取引の免責を表示" title="取引の免責を表示">🚨</button>
+    </div>
+    <div class="notice-wrap" data-notice-id="date">
+      <div class="notice notice-date">
+        <span class="icon">📅</span>
+        <span class="body">掲載情報は <strong>2026年3月時点</strong> のものです。最新の送料・手数料は各サービスの公式サイトでご確認ください。</span>
+        <button type="button" class="close-btn" aria-label="最小化">×</button>
+      </div>
+      <button type="button" class="notice-mini notice-mini-date" aria-label="情報の時点を表示" title="情報の時点を表示">📅</button>
+    </div>
+    <div class="notice-wrap" data-notice-id="help">
+      <div class="notice notice-help">
+        <span class="icon">📚</span>
+        <span class="body">使い方・FAQ・トラブル対応は<a href="" class="help-link" id="help-page-link">こちらから</a></span>
+        <button type="button" class="close-btn" aria-label="最小化">×</button>
+      </div>
+      <button type="button" class="notice-mini notice-mini-help" aria-label="ヘルプを表示" title="ヘルプを表示">📚</button>
+    </div>
+  </div>
+
   <div id="root"></div>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <button class="btn-card fc-pdf"   id="btn-pdf">  <span class="icon">📄</span><span class="label">PDF出力</span></button>
+    <button class="btn-card fc-print" id="btn-print"><span class="icon">🖨</span> <span class="label">印刷</span></button>
+    <button class="btn-card fc-share" id="btn-share"><span class="icon">🔗</span> <span class="label">共有</span></button>
+    <button class="btn-card fc-json"  id="btn-export"><span class="icon">📤</span><span class="label">エクスポート</span></button>
+    <button class="btn-card fc-json"  id="btn-import"><span class="icon">📥</span><span class="label">インポート</span></button>
+  </div>
 
   <!-- ── Footer Block (requirement 4) ── -->
   <footer class="site-footer">
@@ -1271,5 +1442,113 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "211602fb15164c60acea4a97cc828044"}'></script>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Notice ── */
+const NOTICE_KEY = 'enu_notice_minimized';
+function getNoticeList(){try{return JSON.parse(localStorage.getItem(NOTICE_KEY)||'[]')}catch(e){return[]}}
+function saveNoticeList(l){try{localStorage.setItem(NOTICE_KEY,JSON.stringify(l))}catch(e){}}
+(function(){
+  const l = getNoticeList();
+  document.querySelectorAll('.notice-wrap[data-notice-id]').forEach(w=>{
+    if(l.includes(w.dataset.noticeId)) w.classList.add('is-mini');
+  });
+})();
+document.querySelectorAll('.notice-wrap .close-btn').forEach(b=>b.addEventListener('click',()=>{
+  const w=b.closest('.notice-wrap'), i=w.dataset.noticeId;
+  w.classList.add('is-mini');
+  const l=getNoticeList(); if(!l.includes(i)){l.push(i);saveNoticeList(l);}
+}));
+document.querySelectorAll('.notice-mini').forEach(m=>m.addEventListener('click',()=>{
+  const w=m.closest('.notice-wrap'), i=w.dataset.noticeId;
+  w.classList.remove('is-mini');
+  saveNoticeList(getNoticeList().filter(x=>x!==i));
+}));
+const HELP_URL = 'https://enu-tools.pages.dev/help/';
+(function(){
+  const l = document.getElementById('help-page-link');
+  if(!l) return;
+  l.href = HELP_URL; l.target = '_blank'; l.rel = 'noopener';
+})();
+
+/* ── Toast ── */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+/* ── Toolbar ── */
+function handlePrint(){ window.print(); }
+
+async function handleShare(){
+  const shareData={title:document.title, text:document.title+'を共有します', url:location.href};
+  if(navigator.share){
+    try{ await navigator.share(shareData); }catch(e){}
+  } else {
+    try{ await navigator.clipboard.writeText(location.href); toast('🔗 URLをコピーしました'); }
+    catch(e){ toast('共有に対応していない環境です'); }
+  }
+}
+
+const SN_KEYS = ['sn_site','sn_fee','sn_pri','sn_price','sn_ic','sn_pc','sn_w','sn_dims','sn_hist'];
+
+function getAppData(){
+  const data={};
+  SN_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=JSON.parse(v); });
+  return data;
+}
+
+function validateData(data){
+  return data && typeof data==='object' && SN_KEYS.some(k=>k in data);
+}
+
+function applyAppData(data){
+  SN_KEYS.forEach(k=>{ if(k in data) localStorage.setItem(k, JSON.stringify(data[k])); });
+  location.reload();
+}
+
+function handleExport(){
+  const data = getAppData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json],{type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  const date = new Date().toISOString().slice(0,10);
+  a.download = '送料計算シミュレーター_'+date+'.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('📤 JSONをダウンロードしました');
+}
+
+function handleImport(){
+  const input = document.createElement('input');
+  input.type='file'; input.accept='application/json,.json';
+  input.addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if(!validateData(data)) throw new Error('invalid');
+      if(!confirm('現在のデータを上書きしてインポートしますか？')) return;
+      applyAppData(data);
+      toast('📥 インポートしました');
+    }catch(err){
+      toast('⚠️ ファイルが読み込めません');
+    }
+  });
+  input.click();
+}
+
+document.getElementById('btn-pdf')   ?.addEventListener('click', handlePrint);
+document.getElementById('btn-print') ?.addEventListener('click', handlePrint);
+document.getElementById('btn-share') ?.addEventListener('click', handleShare);
+document.getElementById('btn-export')?.addEventListener('click', handleExport);
+document.getElementById('btn-import')?.addEventListener('click', handleImport);
+</script>
 </body>
 </html>
