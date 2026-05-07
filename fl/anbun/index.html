@@ -578,7 +578,7 @@
         }
 
         /* ─── NOTICE ─── */
-        .notice-area{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+        .notice-area{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
         .notice-wrap{width:100%}
         .notice-wrap.is-mini{width:auto}
         .notice-wrap > .notice{display:flex}
@@ -595,17 +595,21 @@
         .notice-info,.notice-mini-info{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
         .notice-warn,.notice-mini-warn{background:#fef6df;border-color:#f0d896;color:#8a5a14}
         .notice-disclaim,.notice-mini-disclaim{background:#faecec;border-color:#e8c8c8;color:#804a52}
+        .notice-trade,.notice-mini-trade{background:#faecec;border-color:#e8c8c8;color:#804a52}
+        .notice-date,.notice-mini-date{background:#f5f1e8;border-color:#e0d6bf;color:#6b5a3d}
         .notice-help,.notice-mini-help{background:#eef2ec;border-color:#c8d3c1;color:#4a5d44}
         .notice-help .help-link{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;color:#344230;text-decoration:underline;text-underline-offset:2px;font-weight:700;font-size:.78rem;white-space:nowrap;margin-left:4px}
         .notice-help .help-link:hover{color:#1f2c1c}
 
         /* ─── TOOLBAR ─── */
+        .fc-pdf{background:#fef0f0;border-color:#f0c8c8;color:#804a52}
+        .fc-print{background:#f0f1f3;border-color:#c8cdd4;color:#525860}
         .fc-share{background:#eef4f9;border-color:#c5d8ea;color:#355a7a}
         .fc-json{background:#f5f1e8;border-color:#d8cdaa;color:#6b5a3d}
         .btn-card{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;flex:1 1 80px;min-width:80px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;padding:13px 6px 11px;border-radius:10px;border:1px solid;cursor:pointer;gap:2px}
         .btn-card .icon{font-size:1.3rem;line-height:1}
         .btn-card .label{font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;font-size:.62rem;font-weight:700;text-align:center;color:inherit;line-height:1.2}
-        .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:16px 14px;background:#fff;border:1px solid #ece5d6;border-radius:10px;align-items:center;margin-bottom:12px}
+        .toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:16px 14px;background:#fff;border:1px solid #ece5d6;border-radius:10px;align-items:center;margin-bottom:6px}
         .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d2820;color:#fff;padding:10px 18px;border-radius:999px;font-size:.78rem;font-weight:700;font-family:'Quicksand','Arial Rounded MT Bold','Kosugi Maru',sans-serif;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,.2)}
         .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
         @media print{.toolbar,.toast{display:none !important}}
@@ -660,10 +664,26 @@
         <div class="notice-wrap" data-notice-id="disclaim">
             <div class="notice notice-disclaim">
                 <span class="icon">🚨</span>
-                <span class="body">本ツールは計算の目安を表示するものです。実際の申告については税務署や税理士等へご確認ください。</span>
+                <span class="body">本ツールの判定は一般的な目安です。実際の経費処理は社内規定や税法により異なるため、税理士にご確認ください。</span>
                 <button type="button" class="close-btn" aria-label="最小化">×</button>
             </div>
             <button type="button" class="notice-mini notice-mini-disclaim" aria-label="免責事項を表示" title="免責事項を表示">🚨</button>
+        </div>
+        <div class="notice-wrap" data-notice-id="trade">
+            <div class="notice notice-trade">
+                <span class="icon">🚨</span>
+                <span class="body">計算結果は目安です。実際の取引における最終判断はご自身でお願いいたします。取引結果について責任を負いかねますのでご了承ください。</span>
+                <button type="button" class="close-btn" aria-label="最小化">×</button>
+            </div>
+            <button type="button" class="notice-mini notice-mini-trade" aria-label="取引の免責を表示" title="取引の免責を表示">🚨</button>
+        </div>
+        <div class="notice-wrap" data-notice-id="date">
+            <div class="notice notice-date">
+                <span class="icon">📅</span>
+                <span class="body">掲載情報は <strong>2026年3月時点</strong> のものです。最新情報は公式サイト等でご確認ください。</span>
+                <button type="button" class="close-btn" aria-label="最小化">×</button>
+            </div>
+            <button type="button" class="notice-mini notice-mini-date" aria-label="情報の時点を表示" title="情報の時点を表示">📅</button>
         </div>
         <div class="notice-wrap" data-notice-id="help">
             <div class="notice notice-help">
@@ -725,6 +745,8 @@
 
 
     <div class="toolbar">
+        <button class="btn-card fc-pdf"   id="btn-pdf"><span class="icon">📄</span><span class="label">PDF出力</span></button>
+        <button class="btn-card fc-print" id="btn-print"><span class="icon">🖨</span><span class="label">印刷</span></button>
         <button class="btn-card fc-share" id="btn-share"><span class="icon">🔗</span><span class="label">共有</span></button>
         <button class="btn-card fc-json"  id="btn-export"><span class="icon">📤</span><span class="label">エクスポート</span></button>
         <button class="btn-card fc-json"  id="btn-import"><span class="icon">📥</span><span class="label">インポート</span></button>
@@ -1048,6 +1070,9 @@
         });
         input.click();
     }
+    function handlePrint(){window.print()}
+    document.getElementById('btn-pdf')?.addEventListener('click',handlePrint);
+    document.getElementById('btn-print')?.addEventListener('click',handlePrint);
     document.getElementById('btn-share')?.addEventListener('click',handleShare);
     document.getElementById('btn-export')?.addEventListener('click',handleExport);
     document.getElementById('btn-import')?.addEventListener('click',handleImport);
