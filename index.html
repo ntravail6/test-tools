@@ -1,10 +1,229 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="robots" content="noindex">
-  <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enu-tools_test | 練習用家計簿</title>
+    <style>
+        /* 大人かわいい「くすみカラー」のデザイン */
+        :root {
+            --bg-color: #fdfaf6;
+            --card-bg: #ffffff;
+            --accent-color: #e2b0b0; /* くすみピンク */
+            --text-color: #5a5a5a;
+            --input-bg: #fafafa;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 380px;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #888;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        /* チェックボックスのかわいい装飾 */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+        }
+
+        .btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-auth {
+            background-color: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-save {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        button:disabled {
+            background-color: #eee;
+            border-color: #eee;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #status-log {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #bbb;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
+    <h1>🎀 enu-tools_test</h1>
+
+    <div class="input-group">
+        <label>カテゴリー</label>
+        <select id="category">
+            <option value="食費">🍴 食費</option>
+            <option value="日用品">🏠 日用品</option>
+            <option value="美容・健康">💄 美容・健康</option>
+            <option value="カフェ・交際費">☕ カフェ・交際費</option>
+            <option value="その他">✨ その他</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>内容（メモ）</label>
+        <input type="text" id="memo" placeholder="なにを買った？">
+    </div>
+
+    <div class="input-group">
+        <label>金額</label>
+        <input type="number" id="price" placeholder="0">
+    </div>
+
+    <label class="checkbox-group">
+        <input type="checkbox" id="is_fixed">
+        <span>固定費にする 📌</span>
+    </label>
+
+    <div class="btn-stack">
+        <button class="btn-auth" onclick="handleAuth()">1. Googleと連携する 🔑</button>
+        <button id="save-btn" class="btn-save" onclick="handleSave()" disabled>2. ドライブに保存 ☁️</button>
+    </div>
+
+    <div id="status-log">ステータス: 待機中 🍰</div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" onload="initGis()"></script>
+<script>
+    const CLIENT_ID = '667616783231-j9moigr818lai3i5h2vlpuenb3fj22qn.apps.googleusercontent.com'; // ★ここに自分のID
+    let tokenClient;
+    let accessToken = null;
+
+    function initGis() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (tokenResponse) => {
+                accessToken = tokenResponse.access_token;
+                document.getElementById('save-btn').disabled = false;
+                document.getElementById('status-log').innerText = '連携完了 ✨ 保存ボタンが押せます';
+            },
+        });
+    }
+
+    function handleAuth() {
+        tokenClient.requestAccessToken();
+    }
+
+    async function handleSave() {
+        const category = document.getElementById('category').value;
+        const memo = document.getElementById('memo').value;
+        const price = document.getElementById('price').value;
+        const isFixed = document.getElementById('is_fixed').checked ? 'はい' : 'いいえ';
+
+        if(!price) { alert('金額を入れてね 🧸'); return; }
+
+        document.getElementById('status-log').innerText = '保存中... ⏳';
+
+        const metadata = {
+            name: `test_${Date.now()}.txt`,
+            mimeType: 'text/plain',
+        };
+
+        const fileContent = `【家計簿テスト】\nカテゴリ: ${category}\n内容: ${memo}\n金額: ${price}円\n固定費: ${isFixed}\n保存日: ${new Date().toLocaleString()}`;
+
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([fileContent], { type: 'text/plain' }));
+
+        try {
+            const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form
+            });
+
+            if (resp.ok) {
+                document.getElementById('status-log').innerText = '保存成功！ 🌸';
+                alert('ドライブに保存できました！');
+            } else {
+                document.getElementById('status-log').innerText = '保存に失敗しました 😢';
+            }
+        } catch (e) {
+            document.getElementById('status-log').innerText = 'エラー発生 ⚠️';
+        }
+    }
+</script>
+
 </body>
 </html>
