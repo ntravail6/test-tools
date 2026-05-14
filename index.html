@@ -3,94 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>enu-tools_test | 練習用家計簿</title>
+    <title>enu-tools_test | スプレッドシート家計簿</title>
     <style>
-        :root {
-            --bg-color: #fdfaf6;
-            --card-bg: #ffffff;
-            --accent-color: #e2b0b0;
-            --text-color: #5a5a5a;
-            --input-bg: #fafafa;
-        }
-
-        body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Sans", Meiryo, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
-
-        .container {
-            background-color: var(--card-bg);
-            width: 100%;
-            max-width: 380px;
-            padding: 25px;
-            border-radius: 24px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
-        }
-
-        h1 {
-            font-size: 1.3rem;
-            text-align: center;
-            color: var(--accent-color);
-            margin-bottom: 20px;
-        }
-
+        /* デザインはそのまま維持 */
+        :root { --bg-color: #fdfaf6; --card-bg: #ffffff; --accent-color: #e2b0b0; --text-color: #5a5a5a; --input-bg: #fafafa; }
+        body { font-family: sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { background-color: var(--card-bg); width: 100%; max-width: 380px; padding: 25px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); }
+        h1 { font-size: 1.3rem; text-align: center; color: var(--accent-color); margin-bottom: 20px; }
         .input-group { margin-bottom: 18px; }
         label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: bold; color: #888; }
-        
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 20px 0;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .checkbox-group input {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--accent-color);
-        }
-
-        .btn-stack { display: flex; flex-direction: column; gap: 10px; }
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 14px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
+        input, select { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; background-color: var(--input-bg); }
+        .btn-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 14px; font-weight: bold; cursor: pointer; }
         .btn-auth { background-color: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); }
         .btn-save { background-color: var(--accent-color); color: white; }
-        button:disabled { background-color: #eee; border-color: #eee; color: #ccc; cursor: not-allowed; }
-
+        button:disabled { background-color: #eee; color: #ccc; }
         #status-log { margin-top: 20px; text-align: center; font-size: 0.75rem; color: #bbb; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎀 enu-tools_test</h1>
+    <h1>🎀 enu-kakeibo_test</h1>
 
     <div class="input-group">
         <label>カテゴリー</label>
@@ -104,7 +38,7 @@
     </div>
 
     <div class="input-group">
-        <label>内容（メモ）</label>
+        <label>内容</label>
         <input type="text" id="memo" placeholder="なにを買った？">
     </div>
 
@@ -113,44 +47,34 @@
         <input type="number" id="price" placeholder="0">
     </div>
 
-    <label class="checkbox-group">
-        <input type="checkbox" id="is_fixed">
-        <span>固定費にする 📌</span>
-    </label>
-
     <div class="btn-stack">
-        <button class="btn-auth" id="auth-btn" onclick="handleAuth()">1. Googleと連携する 🔑</button>
-        <button id="save-btn" class="btn-save" onclick="handleSave()" disabled>2. ドライブに保存 ☁️</button>
+        <button class="btn-auth" onclick="handleAuth()">1. Googleと連携する 🔑</button>
+        <button id="save-btn" class="btn-save" onclick="handleSave()" disabled>2. スプレッドシートに保存 📊</button>
     </div>
 
-    <div id="status-log">ステータス: 読み込み中... 🍰</div>
+    <div id="status-log">ステータス: 準備完了 🌸</div>
 </div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-    // ★ クライアントIDはそのまま維持しています
+    // ★ 自分の情報を入れてね ★
     const CLIENT_ID = '667616783231-j9moigr818lai3i5h2vlpuenb3fj22qn.apps.googleusercontent.com';
+    const SPREADSHEET_ID = 'ここにスプレッドシートIDを貼り付け！'; 
+
     let tokenClient;
     let accessToken = null;
 
-    // ページ読み込み時に初期化
     window.onload = function() {
-        try {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/drive.file',
-                callback: (tokenResponse) => {
-                    if (tokenResponse.access_token) {
-                        accessToken = tokenResponse.access_token;
-                        document.getElementById('save-btn').disabled = false;
-                        document.getElementById('status-log').innerText = '連携完了 ✨ 保存できます';
-                    }
-                },
-            });
-            document.getElementById('status-log').innerText = 'ステータス: 準備完了 🌸';
-        } catch (e) {
-            document.getElementById('status-log').innerText = '初期化エラー。再読み込みしてね 🐣';
-        }
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            // スコープをスプレッドシート用に変更
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            callback: (tokenResponse) => {
+                accessToken = tokenResponse.access_token;
+                document.getElementById('save-btn').disabled = false;
+                document.getElementById('status-log').innerText = '連携完了 ✨ シートに書き込めます';
+            },
+        });
     };
 
     function handleAuth() {
@@ -161,41 +85,41 @@
         const category = document.getElementById('category').value;
         const memo = document.getElementById('memo').value;
         const price = document.getElementById('price').value;
-        const isFixed = document.getElementById('is_fixed').checked ? 'はい' : 'いいえ';
+        const date = new Date().toLocaleString('ja-JP');
 
         if(!price) { alert('金額を入れてね 🧸'); return; }
+        document.getElementById('status-log').innerText = 'シートに書き込み中... ⏳';
 
-        document.getElementById('status-log').innerText = '保存中... ⏳';
-
-        const metadata = {
-            name: `enu_test_${Date.now()}.txt`,
-            mimeType: 'text/plain',
-        };
-
-        const fileContent = `【家計簿テスト】\nカテゴリ: ${category}\n内容: ${memo}\n金額: ${price}円\n固定費: ${isFixed}\n保存日: ${new Date().toLocaleString()}`;
-
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', new Blob([fileContent], { type: 'text/plain' }));
+        // スプレッドシートに送るデータの形
+        const values = [
+            [date, category, memo, price]
+        ];
 
         try {
-            const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            // これが「行追加」のための特別なURLです
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:append?valueInputOption=USER_ENTERED`;
+
+            const resp = await fetch(url, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-                body: form
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values: values })
             });
 
             if (resp.ok) {
-                document.getElementById('status-log').innerText = '保存成功！ 🌸';
-                alert('Googleドライブに保存できたよ！');
+                document.getElementById('status-log').innerText = 'シートに保存成功！ 🌸';
+                alert('スプレッドシートに追記しました！');
             } else {
-                document.getElementById('status-log').innerText = '保存失敗（権限エラーかも）😢';
+                const errorData = await resp.json();
+                console.error(errorData);
+                document.getElementById('status-log').innerText = '保存失敗（IDや権限を確認してね）';
             }
         } catch (e) {
-            document.getElementById('status-log').innerText = '通信エラー発生 ⚠️';
+            document.getElementById('status-log').innerText = 'エラー発生 ⚠️';
         }
     }
 </script>
-
 </body>
 </html>
