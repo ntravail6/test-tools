@@ -97,7 +97,7 @@
 
         try {
             // これが「行追加」のための特別なURLです
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Sheet1!A1:append?valueInputOption=USER_ENTERED`;
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/シート1!A1:append?valueInputOption=USER_ENTERED`;
 
             const resp = await fetch(url, {
                 method: 'POST',
