@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>うりあげちょう｜enu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #7ec3a5;
+  --primary-light: #b8dec9;
+  --primary-dark: #4f9676;
+  --accent: #e0f2e9;
+  --accent-soft: #eef8f3;
+  --bg: #f3faf6;
+  --card-bg: #ffffff;
+  --text: #4a5a52;
+  --sub: #99aaa1;
+  --border: #e3eee9;
+  --danger: #d97c83;
+  --success: #4f9676;
+  --shadow: 0 2px 14px rgba(79, 150, 118, 0.08);
+}
+* { box-sizing: border-box; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); min-height: 100vh; }
+button { font-family: inherit; }
+
+.page-wrapper { max-width: 960px; width: 100%; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 650px) { .page-wrapper { padding: 0 16px; } }
+
+.loading-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 1000; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--accent); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.welcome { min-height: 100vh; display: none; flex-direction: column; align-items: center; padding: 48px 16px; }
+.welcome-icon { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--accent)); box-shadow: var(--shadow); margin-bottom: 16px; }
+.welcome-title { font-size: 1.6rem; font-weight: 700; margin: 8px 0 4px; color: var(--primary-dark); }
+.welcome-tagline { color: var(--sub); font-size: 0.9rem; margin-bottom: 24px; text-align: center; }
+.welcome-card { background: var(--card-bg); border-radius: 18px; padding: 22px 24px; margin: 12px 0; max-width: 400px; width: 100%; box-shadow: var(--shadow); }
+.welcome-card h3 { font-size: 0.85rem; margin: 0 0 12px; color: var(--primary-dark); letter-spacing: 0.05em; }
+.welcome-card ul { margin: 0; padding-left: 20px; font-size: 0.85rem; line-height: 1.8; color: var(--text); }
+.welcome-card ul li { margin-bottom: 2px; }
+.welcome-security { background: var(--accent-soft); border-radius: 14px; padding: 14px 18px; font-size: 0.78rem; color: var(--text); max-width: 400px; width: 100%; margin: 8px 0; line-height: 1.6; }
+.welcome-security strong { color: var(--primary-dark); }
+.btn-login { background: var(--primary); color: white; border: none; padding: 14px 36px; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); margin: 20px 0 4px; transition: transform 0.15s, filter 0.15s; }
+.btn-login:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+.welcome-detail-link { font-size: 0.8rem; color: var(--sub); text-decoration: underline; margin: 4px 0 0; }
+
+.app { display: none; }
+.app-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 0 12px; gap: 12px; flex-wrap: wrap; }
+.app-title-block { flex: 1; min-width: 0; }
+.app-title { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--primary-dark); }
+.app-subtitle { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
+@media (max-width: 650px) {
+  .app-title { font-size: 1.25rem; }
+  .app-subtitle { font-size: 0.7rem; }
+}
+.user-area { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: var(--sub); flex-wrap: wrap; justify-content: flex-end; }
+.user-email { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-logout { background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-size: 0.72rem; cursor: pointer; color: var(--sub); }
+.btn-logout:hover { background: var(--accent-soft); }
+
+.card { background: var(--card-bg); border-radius: 20px; padding: 22px; margin: 14px 0; box-shadow: var(--shadow); }
+.card-title { font-size: 0.95rem; font-weight: 600; margin: 0 0 14px; color: var(--primary-dark); }
+
+.form-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.form-field { flex: 1 1 130px; min-width: 0; }
+.form-field.full { flex: 1 1 100%; }
+.form-field.small { flex: 1 1 90px; }
+.form-field label { display: block; font-size: 0.72rem; color: var(--sub); margin-bottom: 4px; }
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 0.9rem; background: var(--accent-soft); color: var(--text); font-family: inherit;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--primary); background: white; }
+.form-field .hint { font-size: 0.72rem; color: var(--sub); margin-top: 4px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+
+.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+.btn-secondary { background: var(--accent); color: var(--primary-dark); border: none; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; font-weight: 500; }
+.btn-secondary:hover:not(:disabled) { background: var(--primary-light); }
+.btn-icon { background: transparent; border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 0.85rem; padding: 0; color: var(--sub); }
+.btn-icon:hover:not(:disabled) { background: var(--accent-soft); color: var(--primary-dark); }
+.btn-icon.danger:hover:not(:disabled) { background: #fce0e3; color: var(--danger); }
+.btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th { text-align: left; padding: 10px 12px; color: var(--sub); font-weight: 500; font-size: 0.72rem; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .actions { display: flex; gap: 4px; }
+.amount-total { color: var(--primary-dark); font-weight: 700; }
+.num-right { text-align: right; }
+@media (max-width: 650px) { .data-table { display: none; } }
+
+.data-cards { display: none; }
+@media (max-width: 650px) { .data-cards { display: block; } }
+.data-card-item { background: var(--accent-soft); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+.data-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 10px; }
+.data-card-product { font-weight: 600; font-size: 0.95rem; flex: 1; }
+.data-card-amount { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); }
+.data-card-actions { display: flex; gap: 4px; }
+.data-card-meta { display: flex; gap: 10px; font-size: 0.75rem; color: var(--sub); flex-wrap: wrap; }
+.data-card-memo { font-size: 0.78rem; color: var(--text); margin-top: 6px; opacity: 0.85; }
+
+.summary-bar { background: var(--card-bg); border-radius: 18px; padding: 18px 20px; margin: 14px 0 6px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 12px; box-shadow: var(--shadow); }
+.summary-item { text-align: center; flex: 1 1 80px; min-width: 0; }
+.summary-label { font-size: 0.68rem; color: var(--sub); margin-bottom: 4px; }
+.summary-value { font-size: 1.15rem; font-weight: 700; color: var(--primary-dark); }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; padding: 0 4px; }
+.toolbar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: white; font-size: 0.85rem; color: var(--text); font-family: inherit; }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--sub); font-size: 0.88rem; }
+.empty-state-emoji { font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.6; }
+
+.footer-wrapper { margin-top: 4px; }
+.footer-divider { height: 1px; width: 100%; background: var(--border); }
+.footer-credit { text-align: center; font-size: 11px; opacity: 0.8; padding-top: 16px; padding-bottom: 24px; color: var(--sub); line-height: 1.7; }
+.footer-credit a { color: var(--sub); text-decoration: underline; }
+.footer-credit .line1 { margin-bottom: 4px; }
+
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(140%); background: var(--primary-dark); color: white; padding: 12px 22px; border-radius: 12px; font-size: 0.85rem; box-shadow: 0 8px 20px rgba(0,0,0,0.15); z-index: 2000; transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--danger); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1500; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: white; border-radius: 18px; padding: 20px; max-width: 380px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+.modal h3 { margin: 0 0 12px; font-size: 1rem; color: var(--primary-dark); }
+.modal p { margin: 0 0 16px; font-size: 0.9rem; line-height: 1.6; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.calc-preview { background: var(--accent-soft); border-radius: 10px; padding: 8px 12px; font-size: 0.8rem; color: var(--primary-dark); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading">
+  <div class="spinner" aria-label="読み込み中"></div>
+</div>
+
+<div class="welcome" id="welcome">
+  <div class="welcome-icon">🌿</div>
+  <h1 class="welcome-title">うりあげちょう</h1>
+  <p class="welcome-tagline">日々の売上を、すっきり記録</p>
+
+  <div class="welcome-card">
+    <h3>こんなことができます</h3>
+    <ul>
+      <li>商品・単価・数量から売上を自動計算</li>
+      <li>日々の売上をかんたん記録</li>
+      <li>当月の売上・件数・平均を自動集計</li>
+      <li>PC・スマホどちらからでも</li>
+    </ul>
+  </div>
+
+  <div class="welcome-security">
+    🔒 <strong>あなたのデータはあなたのGoogleドライブに保存されます。</strong>
+    運営者（enu）はデータを閲覧できません。第三者の解析ツールも一切利用していません。
+  </div>
+
+  <button class="btn-login" id="btnLogin">Googleと連携してはじめる</button>
+  <a class="welcome-detail-link" href="#" id="detailLink" style="display:none">使い方のくわしい説明 →</a>
+
+  <div class="footer-wrapper" style="width:100%; max-width:400px; margin-top:32px;">
+    <div class="footer-divider"></div>
+    <div class="footer-credit">
+      <div class="line1">🌸 by enu(エヌ) ｜ ほかのアプリも → <a href="https://www.instagram.com/enu_at_desk" target="_blank" rel="noopener">📷 Instagram</a> · <a href="https://www.threads.net/@enu_at_desk" target="_blank" rel="noopener">🧵 Threads</a></div>
+      <div>© 2026 enu(エヌ) All rights reserved.</div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="page-wrapper">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1 class="app-title">🌿 うりあげちょう</h1>
+        <div class="app-subtitle">日々の売上を、すっきり記録</div>
+      </div>
+      <div class="user-area">
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn-logout" id="btnLogout">ログアウト</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2 class="card-title" id="formTitle">あたらしい売上</h2>
+      <div class="form-row">
+        <div class="form-field">
+          <label>日付</label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="form-field" style="flex:2 1 200px;">
+          <label>商品・サービス名</label>
+          <input type="text" id="fProduct" placeholder="例: ハンドメイドピアス" maxlength="60">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field small">
+          <label>単価（円）</label>
+          <input type="number" id="fPrice" placeholder="0" min="0" step="1" inputmode="numeric">
+        </div>
+        <div class="form-field small">
+          <label>数量</label>
+          <input type="number" id="fQty" placeholder="1" min="1" step="1" inputmode="numeric" value="1">
+        </div>
+        <div class="form-field">
+          <label>売上（自動計算）</label>
+          <div class="calc-preview" id="calcPreview">¥0</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field full">
+          <label>メモ（任意）</label>
+          <input type="text" id="fMemo" placeholder="お客さま・支払方法など" maxlength="100">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" id="btnCancel" style="display:none">キャンセル</button>
+        <button class="btn-primary" id="btnSave">保存する</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div style="font-size:0.85rem; color:var(--sub);">表示する月</div>
+      <select id="monthFilter"></select>
+    </div>
+
+    <div class="card">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>商品</th>
+            <th class="num-right">単価</th>
+            <th class="num-right">数量</th>
+            <th class="num-right">売上</th>
+            <th>メモ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="data-cards" id="cardList"></div>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <span class="empty-state-emoji">🌱</span>
+        この月の売上はまだありません
+      </div>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item">
+        <div class="summary-label">当月の売上</div>
+        <div class="summary-value" id="sumTotal">¥0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">件数</div>
+        <div class="summary-value" id="sumCount">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">平均単価</div>
+        <div class="summary-value" id="sumAvg">¥0</div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer-divider"></div>
+      <div class="footer-credit">
+        <div class="line1">🌸 by enu(エヌ) ｜ ほかのアプリも → <a href="https://www.instagram.com/enu_at_desk" target="_blank" rel="noopener">📷 Instagram</a> · <a href="https://www.threads.net/@enu_at_desk" target="_blank" rel="noopener">🧵 Threads</a></div>
+        <div>© 2026 enu(エヌ) All rights reserved.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3>削除しますか？</h3>
+    <p>この売上記録を削除します。元に戻すことはできません。</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelDelete">やめる</button>
+      <button class="btn-primary" id="confirmDelete" style="background:var(--danger)">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js"></script>
+
+<script>
+const ENU_CONFIG = {
+  appId: 'uriage',
+  storageType: 'google',
+  dataFormat: 'sheets'
+};
+
+// ★ Google Cloud Console で発行した OAuth 2.0 クライアントID をここに入れてください
+const CLIENT_ID = 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
+
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DISCOVERY_DOCS = [
+  'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+  'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest'
+];
+
+const FILE_NAME = (() => {
+  if (location.host.includes('localhost') || location.protocol === 'file:') {
+    return `${ENU_CONFIG.appId}_data`;
+  }
+  const host = location.host.split('.')[0];
+  const lastSegment = location.pathname.split('/').filter(p => p).pop() || 'app';
+  return `${host}-${lastSegment}_data`;
+})();
+
+const HEADERS = ['ID', '日付', '商品', '単価', '数量', '売上', 'メモ'];
+
+let tokenClient = null;
+let accessToken = null;
+let fileId = null;
+let userEmail = '';
+let dataRows = [];
+let isWriting = false;
+let editingId = null;
+let pendingDeleteId = null;
+let silentAuthDone = false;
+
+const $ = (id) => document.getElementById(id);
+
+window.addEventListener('load', () => {
+  showScreen('loading');
+  fileId = localStorage.getItem(`${ENU_CONFIG.appId}_fileId`);
+  bindUI();
+  initGapi();
+});
+
+function initGapi() {
+  const tryInit = () => {
+    if (typeof gapi === 'undefined') { setTimeout(tryInit, 80); return; }
+    gapi.load('client', async () => {
+      try {
+        await gapi.client.init({ discoveryDocs: DISCOVERY_DOCS });
+        initGis();
+      } catch (e) {
+        showWelcome();
+        showToast('初期化に失敗しました', true);
+      }
+    });
+  };
+  tryInit();
+}
+
+function initGis() {
+  const tryInit = () => {
+    if (typeof google === 'undefined' || !google.accounts) { setTimeout(tryInit, 80); return; }
+    if (!CLIENT_ID || CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
+      showWelcome();
+      showToast('CLIENT_ID が未設定です。コード冒頭の CLIENT_ID を設定してください。', true);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: handleTokenResponse,
+      error_callback: handleTokenError
+    });
+    trySilentAuth();
+  };
+  tryInit();
+}
+
+function trySilentAuth() {
+  silentAuthDone = false;
+  try { tokenClient.requestAccessToken({ prompt: 'none' }); }
+  catch (e) { silentAuthDone = true; showWelcome(); }
+  setTimeout(() => {
+    if (!silentAuthDone && !accessToken) { silentAuthDone = true; showWelcome(); }
+  }, 2500);
+}
+
+function handleTokenError(err) { silentAuthDone = true; showWelcome(); }
+
+async function handleTokenResponse(response) {
+  silentAuthDone = true;
+  if (response.error) { showWelcome(); return; }
+  accessToken = response.access_token;
+  gapi.client.setToken({ access_token: accessToken });
+  try {
+    await fetchUserEmail();
+    await initSheetFile();
+    await loadData();
+    showApp();
+  } catch (e) {
+    handleApiError(e);
+    showWelcome();
+  }
+}
+
+async function fetchUserEmail() {
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const data = await res.json();
+    userEmail = data.email || '';
+  } catch (e) { userEmail = ''; }
+}
+
+async function initSheetFile() {
+  if (fileId) {
+    try {
+      await gapi.client.drive.files.get({ fileId, fields: 'id' });
+      return;
+    } catch (e) {
+      fileId = null;
+      localStorage.removeItem(`${ENU_CONFIG.appId}_fileId`);
+    }
+  }
+  const safeName = FILE_NAME.replace(/'/g, "\\'");
+  const searchRes = await gapi.client.drive.files.list({
+    q: `name = '${safeName}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
+    fields: 'files(id, name)',
+    pageSize: 5
+  });
+  if (searchRes.result.files && searchRes.result.files.length > 0) {
+    fileId = searchRes.result.files[0].id;
+  } else {
+    const createRes = await gapi.client.sheets.spreadsheets.create({
+      properties: { title: FILE_NAME }
+    });
+    fileId = createRes.result.spreadsheetId;
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: fileId,
+      range: 'Sheet1!A1',
+      valueInputOption: 'RAW',
+      resource: { values: [HEADERS] }
+    });
+  }
+  localStorage.setItem(`${ENU_CONFIG.appId}_fileId`, fileId);
+}
+
+async function loadData() {
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId: fileId,
+    range: 'Sheet1!A2:G'
+  });
+  const rows = res.result.values || [];
+  dataRows = rows.map((row, idx) => ({
+    sheetRow: idx + 2,
+    id: row[0] || '',
+    date: row[1] || '',
+    product: row[2] || '',
+    price: parseInt(row[3], 10) || 0,
+    qty: parseInt(row[4], 10) || 0,
+    total: parseInt(row[5], 10) || 0,
+    memo: row[6] || ''
+  })).filter(r => r.id);
+  rebuildMonthFilter();
+  render();
+}
+
+async function addItem(item) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const newId = 'u' + Date.now() + Math.floor(Math.random()*1000);
+    const row = [newId, item.date, item.product, item.price, item.qty, item.total, item.memo];
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: fileId,
+      range: 'Sheet1!A1',
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      resource: { values: [row] }
+    });
+    await loadData();
+    showToast('保存しました');
+    resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function updateItemById(id, item) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const target = dataRows.find(r => r.id === id);
+    if (!target) throw new Error('not_found');
+    const row = [id, item.date, item.product, item.price, item.qty, item.total, item.memo];
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: fileId,
+      range: `Sheet1!A${target.sheetRow}:G${target.sheetRow}`,
+      valueInputOption: 'RAW',
+      resource: { values: [row] }
+    });
+    await loadData();
+    showToast('更新しました');
+    resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function deleteItemById(id) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const target = dataRows.find(r => r.id === id);
+    if (!target) throw new Error('not_found');
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: fileId,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: 0, dimension: 'ROWS', startIndex: target.sheetRow - 1, endIndex: target.sheetRow }
+          }
+        }]
+      }
+    });
+    await loadData();
+    showToast('削除しました');
+    if (editingId === id) resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+function bindUI() {
+  $('btnLogin').addEventListener('click', () => {
+    if (!tokenClient) { showToast('まだ準備中です。少し待って再度お試しください。', true); return; }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  });
+  $('btnLogout').addEventListener('click', logout);
+  $('btnSave').addEventListener('click', handleSave);
+  $('btnCancel').addEventListener('click', resetForm);
+  $('fPrice').addEventListener('input', updateCalcPreview);
+  $('fQty').addEventListener('input', updateCalcPreview);
+  $('monthFilter').addEventListener('change', render);
+  $('cancelDelete').addEventListener('click', () => { pendingDeleteId = null; $('confirmModal').classList.remove('show'); });
+  $('confirmDelete').addEventListener('click', () => {
+    const id = pendingDeleteId;
+    pendingDeleteId = null;
+    $('confirmModal').classList.remove('show');
+    if (id) deleteItemById(id);
+  });
+
+  $('fDate').value = formatDateISO(new Date());
+}
+
+function updateCalcPreview() {
+  const p = parseInt($('fPrice').value, 10) || 0;
+  const q = parseInt($('fQty').value, 10) || 0;
+  $('calcPreview').textContent = `¥${formatNum(p * q)}`;
+}
+
+function rebuildMonthFilter() {
+  const sel = $('monthFilter');
+  const months = new Set();
+  dataRows.forEach(r => { if (r.date && r.date.length >= 7) months.add(r.date.slice(0, 7)); });
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  months.add(currentMonth);
+  const sorted = Array.from(months).sort().reverse();
+  const previous = sel.value;
+  sel.innerHTML = '';
+  sorted.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m.replace('-', '年') + '月';
+    sel.appendChild(opt);
+  });
+  if (sorted.includes(previous)) sel.value = previous;
+  else sel.value = currentMonth;
+}
+
+function render() {
+  const month = $('monthFilter').value;
+  const filtered = dataRows
+    .filter(r => r.date && r.date.startsWith(month))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const tbody = $('tableBody');
+  tbody.innerHTML = '';
+  filtered.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(r.date)}</td>
+      <td>${escapeHtml(r.product)}</td>
+      <td class="num-right">¥${formatNum(r.price)}</td>
+      <td class="num-right">${formatNum(r.qty)}</td>
+      <td class="num-right amount-total">¥${formatNum(r.total)}</td>
+      <td style="color:var(--sub);font-size:0.8rem;">${escapeHtml(r.memo)}</td>
+      <td><div class="actions">
+        <button class="btn-icon" data-action="edit" data-id="${r.id}" title="編集">✎</button>
+        <button class="btn-icon danger" data-action="del" data-id="${r.id}" title="削除">×</button>
+      </div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const cardList = $('cardList');
+  cardList.innerHTML = '';
+  filtered.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'data-card-item';
+    div.innerHTML = `
+      <div class="data-card-top">
+        <div class="data-card-product">${escapeHtml(r.product)}</div>
+        <div class="data-card-amount">¥${formatNum(r.total)}</div>
+      </div>
+      <div class="data-card-meta">
+        <span>${escapeHtml(r.date)}</span>
+        <span>¥${formatNum(r.price)} × ${formatNum(r.qty)}</span>
+      </div>
+      ${r.memo ? `<div class="data-card-memo">${escapeHtml(r.memo)}</div>` : ''}
+      <div class="data-card-actions" style="margin-top:8px; justify-content:flex-end;">
+        <button class="btn-icon" data-action="edit" data-id="${r.id}">✎</button>
+        <button class="btn-icon danger" data-action="del" data-id="${r.id}">×</button>
+      </div>
+    `;
+    cardList.appendChild(div);
+  });
+
+  $('emptyState').style.display = filtered.length === 0 ? 'block' : 'none';
+  $('dataTable').style.display = filtered.length === 0 ? 'none' : '';
+
+  document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(btn.dataset.id));
+  });
+  document.querySelectorAll('[data-action="del"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      $('confirmModal').classList.add('show');
+    });
+  });
+
+  const total = filtered.reduce((s, r) => s + r.total, 0);
+  const count = filtered.length;
+  const avg = count > 0 ? Math.round(total / count) : 0;
+  $('sumTotal').textContent = `¥${formatNum(total)}`;
+  $('sumCount').textContent = formatNum(count);
+  $('sumAvg').textContent = `¥${formatNum(avg)}`;
+}
+
+function startEdit(id) {
+  const r = dataRows.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  $('fDate').value = r.date;
+  $('fProduct').value = r.product;
+  $('fPrice').value = r.price;
+  $('fQty').value = r.qty;
+  $('fMemo').value = r.memo;
+  updateCalcPreview();
+  $('formTitle').textContent = '売上を編集';
+  $('btnSave').textContent = '更新する';
+  $('btnCancel').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  editingId = null;
+  $('fDate').value = formatDateISO(new Date());
+  $('fProduct').value = '';
+  $('fPrice').value = '';
+  $('fQty').value = '1';
+  $('fMemo').value = '';
+  updateCalcPreview();
+  $('formTitle').textContent = 'あたらしい売上';
+  $('btnSave').textContent = '保存する';
+  $('btnCancel').style.display = 'none';
+}
+
+function handleSave() {
+  const price = parseInt($('fPrice').value, 10) || 0;
+  const qty = parseInt($('fQty').value, 10) || 0;
+  const item = {
+    date: $('fDate').value,
+    product: $('fProduct').value.trim(),
+    price: price,
+    qty: qty,
+    total: price * qty,
+    memo: $('fMemo').value.trim()
+  };
+  if (!item.date) { showToast('日付を入力してください', true); return; }
+  if (!item.product) { showToast('商品名を入力してください', true); return; }
+  if (price <= 0) { showToast('単価を入力してください', true); return; }
+  if (qty <= 0) { showToast('数量を入力してください', true); return; }
+  if (editingId) updateItemById(editingId, item);
+  else addItem(item);
+}
+
+function setWriting(on) {
+  isWriting = on;
+  ['btnSave', 'btnCancel', 'btnLogout'].forEach(id => { if ($(id)) $(id).disabled = on; });
+  document.querySelectorAll('.btn-icon').forEach(b => b.disabled = on);
+  $('btnSave').textContent = on ? '保存中…' : (editingId ? '更新する' : '保存する');
+}
+
+function logout() {
+  if (accessToken && google && google.accounts && google.accounts.oauth2) {
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  accessToken = null;
+  fileId = null;
+  dataRows = [];
+  userEmail = '';
+  localStorage.removeItem(`${ENU_CONFIG.appId}_fileId`);
+  showWelcome();
+}
+
+function handleApiError(e) {
+  const status = e && (e.status || (e.result && e.result.error && e.result.error.code));
+  if (status === 401 || status === 403) {
+    showToast('ログインの有効期限が切れました。再ログインしてください。', true);
+    setTimeout(() => logout(), 1800);
+  } else {
+    showToast('通信エラーが発生しました', true);
+  }
+}
+
+function showScreen(name) {
+  $('loading').style.display = name === 'loading' ? 'flex' : 'none';
+  $('welcome').style.display = name === 'welcome' ? 'flex' : 'none';
+  $('app').style.display = name === 'app' ? 'block' : 'none';
+}
+function showWelcome() { showScreen('welcome'); }
+function showApp() {
+  showScreen('app');
+  $('userEmail').textContent = userEmail;
+}
+function showToast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+function formatDateISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function formatNum(n) { return Number(n || 0).toLocaleString('ja-JP'); }
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+</script>
+</body>
+</html>

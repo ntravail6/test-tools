@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>かけいぼ｜enu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #e89aa3;
+  --primary-light: #f4c0c7;
+  --primary-dark: #c47681;
+  --accent: #fce4e7;
+  --accent-soft: #fdeff1;
+  --bg: #fdf7f8;
+  --card-bg: #ffffff;
+  --text: #5a4d50;
+  --sub: #a99aa0;
+  --border: #f0e4e7;
+  --danger: #d97c83;
+  --success: #88c2a3;
+  --shadow: 0 2px 14px rgba(200, 118, 129, 0.08);
+}
+* { box-sizing: border-box; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); min-height: 100vh; }
+button { font-family: inherit; }
+
+/* Layout */
+.page-wrapper { max-width: 960px; width: 100%; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 650px) { .page-wrapper { padding: 0 16px; } }
+
+/* Loading */
+.loading-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 1000; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--accent); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Welcome */
+.welcome { min-height: 100vh; display: none; flex-direction: column; align-items: center; padding: 48px 16px; }
+.welcome-icon { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--accent)); box-shadow: var(--shadow); margin-bottom: 16px; }
+.welcome-title { font-size: 1.6rem; font-weight: 700; margin: 8px 0 4px; color: var(--primary-dark); }
+.welcome-tagline { color: var(--sub); font-size: 0.9rem; margin-bottom: 24px; text-align: center; }
+.welcome-card { background: var(--card-bg); border-radius: 18px; padding: 22px 24px; margin: 12px 0; max-width: 400px; width: 100%; box-shadow: var(--shadow); }
+.welcome-card h3 { font-size: 0.85rem; margin: 0 0 12px; color: var(--primary-dark); letter-spacing: 0.05em; }
+.welcome-card ul { margin: 0; padding-left: 20px; font-size: 0.85rem; line-height: 1.8; color: var(--text); }
+.welcome-card ul li { margin-bottom: 2px; }
+.welcome-security { background: var(--accent-soft); border-radius: 14px; padding: 14px 18px; font-size: 0.78rem; color: var(--text); max-width: 400px; width: 100%; margin: 8px 0; line-height: 1.6; }
+.welcome-security strong { color: var(--primary-dark); }
+.btn-login { background: var(--primary); color: white; border: none; padding: 14px 36px; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); margin: 20px 0 4px; transition: transform 0.15s, filter 0.15s; }
+.btn-login:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+.welcome-detail-link { font-size: 0.8rem; color: var(--sub); text-decoration: underline; margin: 4px 0 0; }
+
+/* Header */
+.app { display: none; }
+.app-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 0 12px; gap: 12px; flex-wrap: wrap; }
+.app-title-block { flex: 1; min-width: 0; }
+.app-title { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--primary-dark); }
+.app-subtitle { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
+@media (max-width: 650px) {
+  .app-title { font-size: 1.25rem; }
+  .app-subtitle { font-size: 0.7rem; }
+}
+.user-area { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: var(--sub); flex-wrap: wrap; justify-content: flex-end; }
+.user-email { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-logout { background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-size: 0.72rem; cursor: pointer; color: var(--sub); }
+.btn-logout:hover { background: var(--accent-soft); }
+
+/* Cards */
+.card { background: var(--card-bg); border-radius: 20px; padding: 22px; margin: 14px 0; box-shadow: var(--shadow); }
+.card-title { font-size: 0.95rem; font-weight: 600; margin: 0 0 14px; color: var(--primary-dark); }
+
+/* Form */
+.form-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.form-field { flex: 1 1 130px; min-width: 0; }
+.form-field.full { flex: 1 1 100%; }
+.form-field label { display: block; font-size: 0.72rem; color: var(--sub); margin-bottom: 4px; }
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 0.9rem; background: var(--accent-soft); color: var(--text); font-family: inherit;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--primary); background: white; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+
+.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+.btn-secondary { background: var(--accent); color: var(--primary-dark); border: none; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; font-weight: 500; }
+.btn-secondary:hover:not(:disabled) { background: var(--primary-light); }
+.btn-icon { background: transparent; border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 0.85rem; padding: 0; color: var(--sub); }
+.btn-icon:hover:not(:disabled) { background: var(--accent-soft); color: var(--primary-dark); }
+.btn-icon.danger:hover:not(:disabled) { background: #fce0e3; color: var(--danger); }
+.btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Table (PC) */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th { text-align: left; padding: 10px 12px; color: var(--sub); font-weight: 500; font-size: 0.72rem; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .actions { display: flex; gap: 4px; }
+.amount-income { color: var(--success); font-weight: 600; }
+.amount-expense { color: var(--danger); font-weight: 600; }
+@media (max-width: 650px) { .data-table { display: none; } }
+
+/* Card list (mobile) */
+.data-cards { display: none; }
+@media (max-width: 650px) { .data-cards { display: block; } }
+.data-card-item { background: var(--accent-soft); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+.data-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.data-card-amount { font-size: 1.1rem; font-weight: 700; }
+.data-card-actions { display: flex; gap: 4px; }
+.data-card-meta { display: flex; gap: 10px; font-size: 0.75rem; color: var(--sub); flex-wrap: wrap; }
+.data-card-memo { font-size: 0.78rem; color: var(--text); margin-top: 6px; opacity: 0.85; }
+
+/* Summary bar */
+.summary-bar { background: var(--card-bg); border-radius: 18px; padding: 18px 20px; margin: 14px 0 6px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 12px; box-shadow: var(--shadow); }
+.summary-item { text-align: center; flex: 1 1 80px; min-width: 0; }
+.summary-label { font-size: 0.68rem; color: var(--sub); margin-bottom: 4px; }
+.summary-value { font-size: 1.15rem; font-weight: 700; color: var(--primary-dark); }
+.summary-value.income { color: var(--success); }
+.summary-value.expense { color: var(--danger); }
+
+/* Toolbar */
+.toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; padding: 0 4px; }
+.toolbar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: white; font-size: 0.85rem; color: var(--text); font-family: inherit; }
+
+/* Badges */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+.badge-income { background: #e0f2e9; color: #5ba88a; }
+.badge-expense { background: var(--accent); color: var(--primary-dark); }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--sub); font-size: 0.88rem; }
+.empty-state-emoji { font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.6; }
+
+/* Footer */
+.footer-wrapper { margin-top: 4px; }
+.footer-divider { height: 1px; width: 100%; background: var(--border); }
+.footer-credit { text-align: center; font-size: 11px; opacity: 0.8; padding-top: 16px; padding-bottom: 24px; color: var(--sub); line-height: 1.7; }
+.footer-credit a { color: var(--sub); text-decoration: underline; }
+.footer-credit .line1 { margin-bottom: 4px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(140%); background: #5a4d50; color: white; padding: 12px 22px; border-radius: 12px; font-size: 0.85rem; box-shadow: 0 8px 20px rgba(0,0,0,0.15); z-index: 2000; transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--danger); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1500; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: white; border-radius: 18px; padding: 20px; max-width: 380px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+.modal h3 { margin: 0 0 12px; font-size: 1rem; color: var(--primary-dark); }
+.modal p { margin: 0 0 16px; font-size: 0.9rem; line-height: 1.6; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loading">
+  <div class="spinner" aria-label="読み込み中"></div>
+</div>
+
+<!-- Welcome screen -->
+<div class="welcome" id="welcome">
+  <div class="welcome-icon">🌸</div>
+  <h1 class="welcome-title">かけいぼ</h1>
+  <p class="welcome-tagline">毎日のおさいふを、やさしく記録</p>
+
+  <div class="welcome-card">
+    <h3>こんなことができます</h3>
+    <ul>
+      <li>収入・支出をかんたん記録</li>
+      <li>カテゴリごとに分類して管理</li>
+      <li>当月の収支を自動で集計</li>
+      <li>PC・スマホどちらからでも</li>
+    </ul>
+  </div>
+
+  <div class="welcome-security">
+    🔒 <strong>あなたのデータはあなたのGoogleドライブに保存されます。</strong>
+    運営者（enu）はデータを閲覧できません。第三者の解析ツールも一切利用していません。
+  </div>
+
+  <button class="btn-login" id="btnLogin">Googleと連携してはじめる</button>
+  <a class="welcome-detail-link" href="#" id="detailLink" style="display:none">使い方のくわしい説明 →</a>
+
+  <div class="footer-wrapper" style="width:100%; max-width:400px; margin-top:32px;">
+    <div class="footer-divider"></div>
+    <div class="footer-credit">
+      <div class="line1">🌸 by enu(エヌ) ｜ ほかのアプリも → <a href="https://www.instagram.com/enu_at_desk" target="_blank" rel="noopener">📷 Instagram</a> · <a href="https://www.threads.net/@enu_at_desk" target="_blank" rel="noopener">🧵 Threads</a></div>
+      <div>© 2026 enu(エヌ) All rights reserved.</div>
+    </div>
+  </div>
+</div>
+
+<!-- App screen -->
+<div class="app" id="app">
+  <div class="page-wrapper">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1 class="app-title">🌸 かけいぼ</h1>
+        <div class="app-subtitle">毎日のおさいふを、やさしく記録</div>
+      </div>
+      <div class="user-area">
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn-logout" id="btnLogout">ログアウト</button>
+      </div>
+    </header>
+
+    <!-- Input form -->
+    <div class="card">
+      <h2 class="card-title" id="formTitle">あたらしい記録</h2>
+      <div class="form-row">
+        <div class="form-field">
+          <label>日付</label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="form-field">
+          <label>種別</label>
+          <select id="fType">
+            <option value="expense">支出</option>
+            <option value="income">収入</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>カテゴリ</label>
+          <select id="fCategory"></select>
+        </div>
+        <div class="form-field">
+          <label>金額（円）</label>
+          <input type="number" id="fAmount" placeholder="0" min="0" step="1" inputmode="numeric">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field full">
+          <label>メモ（任意）</label>
+          <input type="text" id="fMemo" placeholder="" maxlength="100">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" id="btnCancel" style="display:none">キャンセル</button>
+        <button class="btn-primary" id="btnSave">保存する</button>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div style="font-size:0.85rem; color:var(--sub);">表示する月</div>
+      <select id="monthFilter"></select>
+    </div>
+
+    <!-- Data list -->
+    <div class="card">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>種別</th>
+            <th>カテゴリ</th>
+            <th>金額</th>
+            <th>メモ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="data-cards" id="cardList"></div>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <span class="empty-state-emoji">🌷</span>
+        まだ記録がありません
+      </div>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar">
+      <div class="summary-item">
+        <div class="summary-label">当月の収入</div>
+        <div class="summary-value income" id="sumIncome">¥0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">当月の支出</div>
+        <div class="summary-value expense" id="sumExpense">¥0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">差額</div>
+        <div class="summary-value" id="sumBalance">¥0</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-wrapper">
+      <div class="footer-divider"></div>
+      <div class="footer-credit">
+        <div class="line1">🌸 by enu(エヌ) ｜ ほかのアプリも → <a href="https://www.instagram.com/enu_at_desk" target="_blank" rel="noopener">📷 Instagram</a> · <a href="https://www.threads.net/@enu_at_desk" target="_blank" rel="noopener">🧵 Threads</a></div>
+        <div>© 2026 enu(エヌ) All rights reserved.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Delete confirmation modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3>削除しますか？</h3>
+    <p>この記録を削除します。元に戻すことはできません。</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelDelete">やめる</button>
+      <button class="btn-primary" id="confirmDelete" style="background:var(--danger)">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Google APIs -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js"></script>
+
+<script>
+/* =====================================================================
+ * ENU App Config
+ * ===================================================================== */
+const ENU_CONFIG = {
+  appId: 'kakeibo',
+  storageType: 'google',
+  dataFormat: 'sheets'
+};
+
+// ★ Google Cloud Console で発行した OAuth 2.0 クライアントID をここに入れてください
+const CLIENT_ID = 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
+
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DISCOVERY_DOCS = [
+  'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+  'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest'
+];
+
+const FILE_NAME = (() => {
+  if (location.host.includes('localhost') || location.protocol === 'file:') {
+    return `${ENU_CONFIG.appId}_data`;
+  }
+  const host = location.host.split('.')[0];
+  const lastSegment = location.pathname.split('/').filter(p => p).pop() || 'app';
+  return `${host}-${lastSegment}_data`;
+})();
+
+const HEADERS = ['ID', '日付', '種別', 'カテゴリ', '金額', 'メモ'];
+
+const CATEGORIES = {
+  expense: ['食費', '日用品', '交通', '住居', '光熱費', '通信', '医療', '娯楽', '衣服', '美容', '交際', 'その他'],
+  income:  ['給与', '副業', 'ボーナス', '臨時収入', 'その他']
+};
+
+/* =====================================================================
+ * State
+ * ===================================================================== */
+let tokenClient = null;
+let accessToken = null;
+let fileId = null;
+let userEmail = '';
+let dataRows = [];
+let isWriting = false;
+let editingId = null;
+let pendingDeleteId = null;
+let silentAuthDone = false;
+
+const $ = (id) => document.getElementById(id);
+
+/* =====================================================================
+ * Init
+ * ===================================================================== */
+window.addEventListener('load', () => {
+  showScreen('loading');
+  fileId = localStorage.getItem(`${ENU_CONFIG.appId}_fileId`);
+  bindUI();
+  initGapi();
+});
+
+function initGapi() {
+  const tryInit = () => {
+    if (typeof gapi === 'undefined') { setTimeout(tryInit, 80); return; }
+    gapi.load('client', async () => {
+      try {
+        await gapi.client.init({ discoveryDocs: DISCOVERY_DOCS });
+        initGis();
+      } catch (e) {
+        showWelcome();
+        showToast('初期化に失敗しました', true);
+      }
+    });
+  };
+  tryInit();
+}
+
+function initGis() {
+  const tryInit = () => {
+    if (typeof google === 'undefined' || !google.accounts) { setTimeout(tryInit, 80); return; }
+    if (!CLIENT_ID || CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
+      showWelcome();
+      showToast('CLIENT_ID が未設定です。コード冒頭の CLIENT_ID を設定してください。', true);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: handleTokenResponse,
+      error_callback: handleTokenError
+    });
+    trySilentAuth();
+  };
+  tryInit();
+}
+
+function trySilentAuth() {
+  silentAuthDone = false;
+  try {
+    tokenClient.requestAccessToken({ prompt: 'none' });
+  } catch (e) {
+    silentAuthDone = true;
+    showWelcome();
+  }
+  setTimeout(() => {
+    if (!silentAuthDone && !accessToken) {
+      silentAuthDone = true;
+      showWelcome();
+    }
+  }, 2500);
+}
+
+function handleTokenError(err) {
+  silentAuthDone = true;
+  showWelcome();
+}
+
+async function handleTokenResponse(response) {
+  silentAuthDone = true;
+  if (response.error) { showWelcome(); return; }
+  accessToken = response.access_token;
+  gapi.client.setToken({ access_token: accessToken });
+  try {
+    await fetchUserEmail();
+    await initSheetFile();
+    await loadData();
+    showApp();
+  } catch (e) {
+    handleApiError(e);
+    showWelcome();
+  }
+}
+
+async function fetchUserEmail() {
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const data = await res.json();
+    userEmail = data.email || '';
+  } catch (e) {
+    userEmail = '';
+  }
+}
+
+async function initSheetFile() {
+  if (fileId) {
+    try {
+      await gapi.client.drive.files.get({ fileId, fields: 'id' });
+      return;
+    } catch (e) {
+      fileId = null;
+      localStorage.removeItem(`${ENU_CONFIG.appId}_fileId`);
+    }
+  }
+  const safeName = FILE_NAME.replace(/'/g, "\\'");
+  const searchRes = await gapi.client.drive.files.list({
+    q: `name = '${safeName}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
+    fields: 'files(id, name)',
+    pageSize: 5
+  });
+  if (searchRes.result.files && searchRes.result.files.length > 0) {
+    fileId = searchRes.result.files[0].id;
+  } else {
+    const createRes = await gapi.client.sheets.spreadsheets.create({
+      properties: { title: FILE_NAME }
+    });
+    fileId = createRes.result.spreadsheetId;
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: fileId,
+      range: 'Sheet1!A1',
+      valueInputOption: 'RAW',
+      resource: { values: [HEADERS] }
+    });
+  }
+  localStorage.setItem(`${ENU_CONFIG.appId}_fileId`, fileId);
+}
+
+async function loadData() {
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId: fileId,
+    range: 'Sheet1!A2:F'
+  });
+  const rows = res.result.values || [];
+  dataRows = rows.map((row, idx) => ({
+    sheetRow: idx + 2,
+    id: row[0] || '',
+    date: row[1] || '',
+    type: row[2] || 'expense',
+    category: row[3] || '',
+    amount: parseInt(row[4], 10) || 0,
+    memo: row[5] || ''
+  })).filter(r => r.id);
+  rebuildMonthFilter();
+  render();
+}
+
+/* =====================================================================
+ * CRUD
+ * ===================================================================== */
+async function addItem(item) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const newId = 'k' + Date.now() + Math.floor(Math.random()*1000);
+    const row = [newId, item.date, item.type, item.category, item.amount, item.memo];
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: fileId,
+      range: 'Sheet1!A1',
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      resource: { values: [row] }
+    });
+    await loadData();
+    showToast('保存しました');
+    resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function updateItemById(id, item) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const target = dataRows.find(r => r.id === id);
+    if (!target) throw new Error('not_found');
+    const row = [id, item.date, item.type, item.category, item.amount, item.memo];
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: fileId,
+      range: `Sheet1!A${target.sheetRow}:F${target.sheetRow}`,
+      valueInputOption: 'RAW',
+      resource: { values: [row] }
+    });
+    await loadData();
+    showToast('更新しました');
+    resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function deleteItemById(id) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const target = dataRows.find(r => r.id === id);
+    if (!target) throw new Error('not_found');
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: fileId,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: 0, dimension: 'ROWS', startIndex: target.sheetRow - 1, endIndex: target.sheetRow }
+          }
+        }]
+      }
+    });
+    await loadData();
+    showToast('削除しました');
+    if (editingId === id) resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+/* =====================================================================
+ * UI
+ * ===================================================================== */
+function bindUI() {
+  $('btnLogin').addEventListener('click', () => {
+    if (!tokenClient) { showToast('まだ準備中です。少し待って再度お試しください。', true); return; }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  });
+  $('btnLogout').addEventListener('click', logout);
+  $('btnSave').addEventListener('click', handleSave);
+  $('btnCancel').addEventListener('click', resetForm);
+  $('fType').addEventListener('change', () => rebuildCategoryOptions($('fType').value));
+  $('monthFilter').addEventListener('change', render);
+  $('cancelDelete').addEventListener('click', () => { pendingDeleteId = null; $('confirmModal').classList.remove('show'); });
+  $('confirmDelete').addEventListener('click', () => {
+    const id = pendingDeleteId;
+    pendingDeleteId = null;
+    $('confirmModal').classList.remove('show');
+    if (id) deleteItemById(id);
+  });
+
+  // Default date = today
+  const today = new Date();
+  $('fDate').value = formatDateISO(today);
+  rebuildCategoryOptions('expense');
+}
+
+function rebuildCategoryOptions(type) {
+  const sel = $('fCategory');
+  const current = sel.value;
+  sel.innerHTML = '';
+  CATEGORIES[type].forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  if (CATEGORIES[type].includes(current)) sel.value = current;
+}
+
+function rebuildMonthFilter() {
+  const sel = $('monthFilter');
+  const months = new Set();
+  dataRows.forEach(r => { if (r.date && r.date.length >= 7) months.add(r.date.slice(0, 7)); });
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  months.add(currentMonth);
+  const sorted = Array.from(months).sort().reverse();
+  const previous = sel.value;
+  sel.innerHTML = '';
+  sorted.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m.replace('-', '年') + '月';
+    sel.appendChild(opt);
+  });
+  if (sorted.includes(previous)) sel.value = previous;
+  else sel.value = currentMonth;
+}
+
+function render() {
+  const month = $('monthFilter').value;
+  const filtered = dataRows
+    .filter(r => r.date && r.date.startsWith(month))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  // Table (PC)
+  const tbody = $('tableBody');
+  tbody.innerHTML = '';
+  filtered.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(r.date)}</td>
+      <td><span class="badge badge-${r.type}">${r.type === 'income' ? '収入' : '支出'}</span></td>
+      <td>${escapeHtml(r.category)}</td>
+      <td class="amount-${r.type}">${r.type === 'expense' ? '-' : '+'}¥${formatNum(r.amount)}</td>
+      <td style="color:var(--sub);font-size:0.8rem;">${escapeHtml(r.memo)}</td>
+      <td><div class="actions">
+        <button class="btn-icon" data-action="edit" data-id="${r.id}" title="編集">✎</button>
+        <button class="btn-icon danger" data-action="del" data-id="${r.id}" title="削除">×</button>
+      </div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Cards (mobile)
+  const cardList = $('cardList');
+  cardList.innerHTML = '';
+  filtered.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'data-card-item';
+    div.innerHTML = `
+      <div class="data-card-top">
+        <div class="data-card-amount amount-${r.type}">${r.type === 'expense' ? '-' : '+'}¥${formatNum(r.amount)}</div>
+        <div class="data-card-actions">
+          <button class="btn-icon" data-action="edit" data-id="${r.id}">✎</button>
+          <button class="btn-icon danger" data-action="del" data-id="${r.id}">×</button>
+        </div>
+      </div>
+      <div class="data-card-meta">
+        <span>${escapeHtml(r.date)}</span>
+        <span class="badge badge-${r.type}">${r.type === 'income' ? '収入' : '支出'}</span>
+        <span>${escapeHtml(r.category)}</span>
+      </div>
+      ${r.memo ? `<div class="data-card-memo">${escapeHtml(r.memo)}</div>` : ''}
+    `;
+    cardList.appendChild(div);
+  });
+
+  // Empty state
+  $('emptyState').style.display = filtered.length === 0 ? 'block' : 'none';
+  $('dataTable').style.display = filtered.length === 0 ? 'none' : '';
+
+  // Bind row actions
+  document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(btn.dataset.id));
+  });
+  document.querySelectorAll('[data-action="del"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      $('confirmModal').classList.add('show');
+    });
+  });
+
+  // Summary
+  const income = filtered.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0);
+  const expense = filtered.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0);
+  const balance = income - expense;
+  $('sumIncome').textContent = `¥${formatNum(income)}`;
+  $('sumExpense').textContent = `¥${formatNum(expense)}`;
+  $('sumBalance').textContent = (balance < 0 ? '-¥' : '¥') + formatNum(Math.abs(balance));
+  $('sumBalance').className = 'summary-value ' + (balance >= 0 ? 'income' : 'expense');
+}
+
+function startEdit(id) {
+  const r = dataRows.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  $('fDate').value = r.date;
+  $('fType').value = r.type;
+  rebuildCategoryOptions(r.type);
+  $('fCategory').value = r.category;
+  $('fAmount').value = r.amount;
+  $('fMemo').value = r.memo;
+  $('formTitle').textContent = '記録を編集';
+  $('btnSave').textContent = '更新する';
+  $('btnCancel').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  editingId = null;
+  $('fDate').value = formatDateISO(new Date());
+  $('fType').value = 'expense';
+  rebuildCategoryOptions('expense');
+  $('fAmount').value = '';
+  $('fMemo').value = '';
+  $('formTitle').textContent = 'あたらしい記録';
+  $('btnSave').textContent = '保存する';
+  $('btnCancel').style.display = 'none';
+}
+
+function handleSave() {
+  const item = {
+    date: $('fDate').value,
+    type: $('fType').value,
+    category: $('fCategory').value,
+    amount: parseInt($('fAmount').value, 10) || 0,
+    memo: $('fMemo').value.trim()
+  };
+  if (!item.date) { showToast('日付を入力してください', true); return; }
+  if (!item.amount || item.amount <= 0) { showToast('金額を入力してください', true); return; }
+  if (editingId) updateItemById(editingId, item);
+  else addItem(item);
+}
+
+function setWriting(on) {
+  isWriting = on;
+  ['btnSave', 'btnCancel', 'btnLogout'].forEach(id => { if ($(id)) $(id).disabled = on; });
+  document.querySelectorAll('.btn-icon').forEach(b => b.disabled = on);
+  $('btnSave').textContent = on ? '保存中…' : (editingId ? '更新する' : '保存する');
+}
+
+function logout() {
+  if (accessToken && google && google.accounts && google.accounts.oauth2) {
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  accessToken = null;
+  fileId = null;
+  dataRows = [];
+  userEmail = '';
+  localStorage.removeItem(`${ENU_CONFIG.appId}_fileId`);
+  showWelcome();
+}
+
+function handleApiError(e) {
+  const status = e && (e.status || (e.result && e.result.error && e.result.error.code));
+  if (status === 401 || status === 403) {
+    showToast('ログインの有効期限が切れました。再ログインしてください。', true);
+    setTimeout(() => logout(), 1800);
+  } else {
+    showToast('通信エラーが発生しました', true);
+  }
+}
+
+/* =====================================================================
+ * Screens & helpers
+ * ===================================================================== */
+function showScreen(name) {
+  $('loading').style.display = name === 'loading' ? 'flex' : 'none';
+  $('welcome').style.display = name === 'welcome' ? 'flex' : 'none';
+  $('app').style.display = name === 'app' ? 'block' : 'none';
+}
+function showWelcome() { showScreen('welcome'); }
+function showApp() {
+  showScreen('app');
+  $('userEmail').textContent = userEmail;
+}
+function showToast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+function formatDateISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function formatNum(n) {
+  return Number(n || 0).toLocaleString('ja-JP');
+}
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+</script>
+</body>
+</html>

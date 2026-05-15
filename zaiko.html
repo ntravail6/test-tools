@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ざいこちょう｜enu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Kosugi+Maru&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #a89bc7;
+  --primary-light: #cdc1e0;
+  --primary-dark: #6e5d8f;
+  --accent: #ebe2f4;
+  --accent-soft: #f4eef9;
+  --bg: #f7f3fb;
+  --card-bg: #ffffff;
+  --text: #534b60;
+  --sub: #a59caf;
+  --border: #eae3f0;
+  --danger: #d97c83;
+  --warn: #d9a55a;
+  --success: #7ec3a5;
+  --shadow: 0 2px 14px rgba(110, 93, 143, 0.08);
+}
+* { box-sizing: border-box; font-family: 'Quicksand', 'Arial Rounded MT Bold', 'Kosugi Maru', sans-serif; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); min-height: 100vh; }
+button { font-family: inherit; }
+
+.page-wrapper { max-width: 960px; width: 100%; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 650px) { .page-wrapper { padding: 0 16px; } }
+
+.loading-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 1000; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--accent); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.welcome { min-height: 100vh; display: none; flex-direction: column; align-items: center; padding: 48px 16px; }
+.welcome-icon { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--accent)); box-shadow: var(--shadow); margin-bottom: 16px; }
+.welcome-title { font-size: 1.6rem; font-weight: 700; margin: 8px 0 4px; color: var(--primary-dark); }
+.welcome-tagline { color: var(--sub); font-size: 0.9rem; margin-bottom: 24px; text-align: center; }
+.welcome-card { background: var(--card-bg); border-radius: 18px; padding: 22px 24px; margin: 12px 0; max-width: 400px; width: 100%; box-shadow: var(--shadow); }
+.welcome-card h3 { font-size: 0.85rem; margin: 0 0 12px; color: var(--primary-dark); letter-spacing: 0.05em; }
+.welcome-card ul { margin: 0; padding-left: 20px; font-size: 0.85rem; line-height: 1.8; color: var(--text); }
+.welcome-card ul li { margin-bottom: 2px; }
+.welcome-security { background: var(--accent-soft); border-radius: 14px; padding: 14px 18px; font-size: 0.78rem; color: var(--text); max-width: 400px; width: 100%; margin: 8px 0; line-height: 1.6; }
+.welcome-security strong { color: var(--primary-dark); }
+.btn-login { background: var(--primary); color: white; border: none; padding: 14px 36px; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); margin: 20px 0 4px; transition: transform 0.15s, filter 0.15s; }
+.btn-login:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+.welcome-detail-link { font-size: 0.8rem; color: var(--sub); text-decoration: underline; margin: 4px 0 0; }
+
+.app { display: none; }
+.app-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 0 12px; gap: 12px; flex-wrap: wrap; }
+.app-title-block { flex: 1; min-width: 0; }
+.app-title { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--primary-dark); }
+.app-subtitle { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
+@media (max-width: 650px) {
+  .app-title { font-size: 1.25rem; }
+  .app-subtitle { font-size: 0.7rem; }
+}
+.user-area { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: var(--sub); flex-wrap: wrap; justify-content: flex-end; }
+.user-email { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-logout { background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-size: 0.72rem; cursor: pointer; color: var(--sub); }
+.btn-logout:hover { background: var(--accent-soft); }
+
+.card { background: var(--card-bg); border-radius: 20px; padding: 22px; margin: 14px 0; box-shadow: var(--shadow); }
+.card-title { font-size: 0.95rem; font-weight: 600; margin: 0 0 14px; color: var(--primary-dark); }
+
+.form-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.form-field { flex: 1 1 130px; min-width: 0; }
+.form-field.full { flex: 1 1 100%; }
+.form-field.small { flex: 1 1 90px; }
+.form-field label { display: block; font-size: 0.72rem; color: var(--sub); margin-bottom: 4px; }
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 0.9rem; background: var(--accent-soft); color: var(--text); font-family: inherit;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--primary); background: white; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+
+.btn-primary { background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+.btn-secondary { background: var(--accent); color: var(--primary-dark); border: none; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; font-weight: 500; }
+.btn-secondary:hover:not(:disabled) { background: var(--primary-light); }
+.btn-icon { background: transparent; border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 0.85rem; padding: 0; color: var(--sub); }
+.btn-icon:hover:not(:disabled) { background: var(--accent-soft); color: var(--primary-dark); }
+.btn-icon.danger:hover:not(:disabled) { background: #fce0e3; color: var(--danger); }
+.btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-stock { background: var(--accent); color: var(--primary-dark); border: none; border-radius: 8px; width: 30px; height: 30px; font-size: 1rem; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
+.btn-stock:hover:not(:disabled) { background: var(--primary-light); }
+.btn-stock:disabled { opacity: 0.4; cursor: not-allowed; }
+.stock-control { display: inline-flex; align-items: center; gap: 6px; }
+.stock-num { display: inline-block; min-width: 40px; text-align: center; font-weight: 700; font-size: 1rem; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th { text-align: left; padding: 10px 12px; color: var(--sub); font-weight: 500; font-size: 0.72rem; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .actions { display: flex; gap: 4px; }
+.data-table tr.low-stock { background: #fef6e8; }
+.data-table tr.out-stock { background: #fcebed; }
+@media (max-width: 650px) { .data-table { display: none; } }
+
+.data-cards { display: none; }
+@media (max-width: 650px) { .data-cards { display: block; } }
+.data-card-item { background: var(--accent-soft); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+.data-card-item.low-stock { background: #fef6e8; }
+.data-card-item.out-stock { background: #fcebed; }
+.data-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 10px; }
+.data-card-name { font-weight: 600; font-size: 0.95rem; flex: 1; }
+.data-card-stock-line { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.data-card-meta { display: flex; gap: 10px; font-size: 0.75rem; color: var(--sub); flex-wrap: wrap; }
+.data-card-memo { font-size: 0.78rem; color: var(--text); margin-top: 6px; opacity: 0.85; }
+.data-card-actions { display: flex; gap: 4px; }
+
+.summary-bar { background: var(--card-bg); border-radius: 18px; padding: 18px 20px; margin: 14px 0 6px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 12px; box-shadow: var(--shadow); }
+.summary-item { text-align: center; flex: 1 1 80px; min-width: 0; }
+.summary-label { font-size: 0.68rem; color: var(--sub); margin-bottom: 4px; }
+.summary-value { font-size: 1.15rem; font-weight: 700; color: var(--primary-dark); }
+.summary-value.warn { color: var(--warn); }
+.summary-value.danger { color: var(--danger); }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 6px; padding: 0 4px; }
+.toolbar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: white; font-size: 0.85rem; color: var(--text); font-family: inherit; }
+
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+.badge-low { background: #fbe6c2; color: #b07a26; }
+.badge-out { background: var(--accent); color: var(--danger); }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--sub); font-size: 0.88rem; }
+.empty-state-emoji { font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.6; }
+
+.footer-wrapper { margin-top: 4px; }
+.footer-divider { height: 1px; width: 100%; background: var(--border); }
+.footer-credit { text-align: center; font-size: 11px; opacity: 0.8; padding-top: 16px; padding-bottom: 24px; color: var(--sub); line-height: 1.7; }
+.footer-credit a { color: var(--sub); text-decoration: underline; }
+.footer-credit .line1 { margin-bottom: 4px; }
+
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(140%); background: var(--primary-dark); color: white; padding: 12px 22px; border-radius: 12px; font-size: 0.85rem; box-shadow: 0 8px 20px rgba(0,0,0,0.15); z-index: 2000; transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--danger); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1500; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: white; border-radius: 18px; padding: 20px; max-width: 380px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+.modal h3 { margin: 0 0 12px; font-size: 1rem; color: var(--primary-dark); }
+.modal p { margin: 0 0 16px; font-size: 0.9rem; line-height: 1.6; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading">
+  <div class="spinner" aria-label="読み込み中"></div>
+</div>
+
+<div class="welcome" id="welcome">
+  <div class="welcome-icon">🪻</div>
+  <h1 class="welcome-title">ざいこちょう</h1>
+  <p class="welcome-tagline">商品の在庫を、わかりやすく管理</p>
+
+  <div class="welcome-card">
+    <h3>こんなことができます</h3>
+    <ul>
+      <li>商品ごとに在庫数を記録</li>
+      <li>＋／−ボタンで在庫数をかんたん増減</li>
+      <li>しきい値を下回ると色で警告表示</li>
+      <li>PC・スマホどちらからでも</li>
+    </ul>
+  </div>
+
+  <div class="welcome-security">
+    🔒 <strong>あなたのデータはあなたのGoogleドライブに保存されます。</strong>
+    運営者（enu）はデータを閲覧できません。第三者の解析ツールも一切利用していません。
+  </div>
+
+  <button class="btn-login" id="btnLogin">Googleと連携してはじめる</button>
+  <a class="welcome-detail-link" href="#" id="detailLink" style="display:none">使い方のくわしい説明 →</a>
+
+  <div class="footer-wrapper" style="width:100%; max-width:400px; margin-top:32px;">
+    <div class="footer-divider"></div>
+    <div class="footer-credit">
+      <div class="line1">🌸 by enu(エヌ) ｜ ほかのアプリも → <a href="https://www.instagram.com/enu_at_desk" target="_blank" rel="noopener">📷 Instagram</a> · <a href="https://www.threads.net/@enu_at_desk" target="_blank" rel="noopener">🧵 Threads</a></div>
+      <div>© 2026 enu(エヌ) All rights reserved.</div>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="page-wrapper">
+    <header class="app-header">
+      <div class="app-title-block">
+        <h1 class="app-title">🪻 ざいこちょう</h1>
+        <div class="app-subtitle">商品の在庫を、わかりやすく管理</div>
+      </div>
+      <div class="user-area">
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn-logout" id="btnLogout">ログアウト</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2 class="card-title" id="formTitle">あたらしい商品</h2>
+      <div class="form-row">
+        <div class="form-field" style="flex:2 1 200px;">
+          <label>商品名</label>
+          <input type="text" id="fName" placeholder="例: マグカップ" maxlength="60">
+        </div>
+        <div class="form-field">
+          <label>カテゴリ</label>
+          <input type="text" id="fCategory" placeholder="例: 食器" maxlength="30">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field small">
+          <label>在庫数</label>
+          <input type="number" id="fStock" placeholder="0" min="0" step="1" inputmode="numeric" value="0">
+        </div>
+        <div class="form-field small">
+          <label>単位</label>
+          <input type="text" id="fUnit" placeholder="個" maxlength="6" value="個">
+        </div>
+        <div class="form-field small">
+          <label>しきい値</label>
+          <input type="number" id="fThreshold" placeholder="3" min="0" step="1" inputmode="numeric" value="3">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field full">
+          <label>メモ（任意）</label>
+          <input type="text" id="fMemo" placeholder="" maxlength="100">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" id="btnCancel" style="display:none">キャンセル</button>
+        <button class="btn-primary" id="btnSave">登録する</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div style="font-size:0.85rem; color:var(--sub);">並び替え</div>
+      <select id="sortFilter">
+        <option value="lowFirst">在庫少ない順</option>
+        <option value="nameAsc">商品名（あいうえお順）</option>
+        <option value="updatedDesc">最終更新が新しい順</option>
+        <option value="categoryAsc">カテゴリ順</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>商品名</th>
+            <th>カテゴリ</th>
+            <th>在庫</th>
+            <th>状態</th>
+            <th>最終更新</th>
+            <th>メモ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="data-cards" id="cardList"></div>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <span class="empty-state-emoji">🌷</span>
+        まだ商品がありません
+      </div>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item">
+        <div class="summary-label">商品数</div>
+        <div class="summary-value" id="sumCount">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">在庫少</div>
+        <div class="summary-value warn" id="sumLow">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">在庫切れ</div>
+        <div class="summary-value danger" id="sumOut">0</div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer-divider"></div>
+      <div class="footer-credit">
+        <div class="line1">🌸 by enu(エヌ) ｜ ほかのアプリも → <a href="https://www.instagram.com/enu_at_desk" target="_blank" rel="noopener">📷 Instagram</a> · <a href="https://www.threads.net/@enu_at_desk" target="_blank" rel="noopener">🧵 Threads</a></div>
+        <div>© 2026 enu(エヌ) All rights reserved.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3>削除しますか？</h3>
+    <p>この商品を削除します。元に戻すことはできません。</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelDelete">やめる</button>
+      <button class="btn-primary" id="confirmDelete" style="background:var(--danger)">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js"></script>
+
+<script>
+const ENU_CONFIG = {
+  appId: 'zaiko',
+  storageType: 'google',
+  dataFormat: 'sheets'
+};
+
+// ★ Google Cloud Console で発行した OAuth 2.0 クライアントID をここに入れてください
+const CLIENT_ID = 'YOUR_CLIENT_ID_HERE.apps.googleusercontent.com';
+
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DISCOVERY_DOCS = [
+  'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+  'https://www.googleapis.com/discovery/v1/apis/sheets/v4/rest'
+];
+
+const FILE_NAME = (() => {
+  if (location.host.includes('localhost') || location.protocol === 'file:') {
+    return `${ENU_CONFIG.appId}_data`;
+  }
+  const host = location.host.split('.')[0];
+  const lastSegment = location.pathname.split('/').filter(p => p).pop() || 'app';
+  return `${host}-${lastSegment}_data`;
+})();
+
+const HEADERS = ['ID', '商品名', 'カテゴリ', '在庫数', '単位', 'しきい値', '最終更新日', 'メモ'];
+
+let tokenClient = null;
+let accessToken = null;
+let fileId = null;
+let userEmail = '';
+let dataRows = [];
+let isWriting = false;
+let editingId = null;
+let pendingDeleteId = null;
+let silentAuthDone = false;
+
+const $ = (id) => document.getElementById(id);
+
+window.addEventListener('load', () => {
+  showScreen('loading');
+  fileId = localStorage.getItem(`${ENU_CONFIG.appId}_fileId`);
+  bindUI();
+  initGapi();
+});
+
+function initGapi() {
+  const tryInit = () => {
+    if (typeof gapi === 'undefined') { setTimeout(tryInit, 80); return; }
+    gapi.load('client', async () => {
+      try {
+        await gapi.client.init({ discoveryDocs: DISCOVERY_DOCS });
+        initGis();
+      } catch (e) {
+        showWelcome();
+        showToast('初期化に失敗しました', true);
+      }
+    });
+  };
+  tryInit();
+}
+
+function initGis() {
+  const tryInit = () => {
+    if (typeof google === 'undefined' || !google.accounts) { setTimeout(tryInit, 80); return; }
+    if (!CLIENT_ID || CLIENT_ID.startsWith('YOUR_CLIENT_ID')) {
+      showWelcome();
+      showToast('CLIENT_ID が未設定です。コード冒頭の CLIENT_ID を設定してください。', true);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: handleTokenResponse,
+      error_callback: handleTokenError
+    });
+    trySilentAuth();
+  };
+  tryInit();
+}
+
+function trySilentAuth() {
+  silentAuthDone = false;
+  try { tokenClient.requestAccessToken({ prompt: 'none' }); }
+  catch (e) { silentAuthDone = true; showWelcome(); }
+  setTimeout(() => {
+    if (!silentAuthDone && !accessToken) { silentAuthDone = true; showWelcome(); }
+  }, 2500);
+}
+
+function handleTokenError(err) { silentAuthDone = true; showWelcome(); }
+
+async function handleTokenResponse(response) {
+  silentAuthDone = true;
+  if (response.error) { showWelcome(); return; }
+  accessToken = response.access_token;
+  gapi.client.setToken({ access_token: accessToken });
+  try {
+    await fetchUserEmail();
+    await initSheetFile();
+    await loadData();
+    showApp();
+  } catch (e) {
+    handleApiError(e);
+    showWelcome();
+  }
+}
+
+async function fetchUserEmail() {
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const data = await res.json();
+    userEmail = data.email || '';
+  } catch (e) { userEmail = ''; }
+}
+
+async function initSheetFile() {
+  if (fileId) {
+    try {
+      await gapi.client.drive.files.get({ fileId, fields: 'id' });
+      return;
+    } catch (e) {
+      fileId = null;
+      localStorage.removeItem(`${ENU_CONFIG.appId}_fileId`);
+    }
+  }
+  const safeName = FILE_NAME.replace(/'/g, "\\'");
+  const searchRes = await gapi.client.drive.files.list({
+    q: `name = '${safeName}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
+    fields: 'files(id, name)',
+    pageSize: 5
+  });
+  if (searchRes.result.files && searchRes.result.files.length > 0) {
+    fileId = searchRes.result.files[0].id;
+  } else {
+    const createRes = await gapi.client.sheets.spreadsheets.create({
+      properties: { title: FILE_NAME }
+    });
+    fileId = createRes.result.spreadsheetId;
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: fileId,
+      range: 'Sheet1!A1',
+      valueInputOption: 'RAW',
+      resource: { values: [HEADERS] }
+    });
+  }
+  localStorage.setItem(`${ENU_CONFIG.appId}_fileId`, fileId);
+}
+
+async function loadData() {
+  const res = await gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId: fileId,
+    range: 'Sheet1!A2:H'
+  });
+  const rows = res.result.values || [];
+  dataRows = rows.map((row, idx) => ({
+    sheetRow: idx + 2,
+    id: row[0] || '',
+    name: row[1] || '',
+    category: row[2] || '',
+    stock: parseInt(row[3], 10) || 0,
+    unit: row[4] || '個',
+    threshold: parseInt(row[5], 10) || 0,
+    updatedAt: row[6] || '',
+    memo: row[7] || ''
+  })).filter(r => r.id);
+  render();
+}
+
+async function addItem(item) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const newId = 'z' + Date.now() + Math.floor(Math.random()*1000);
+    const today = formatDateISO(new Date());
+    const row = [newId, item.name, item.category, item.stock, item.unit, item.threshold, today, item.memo];
+    await gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: fileId,
+      range: 'Sheet1!A1',
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      resource: { values: [row] }
+    });
+    await loadData();
+    showToast('登録しました');
+    resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function updateItemById(id, item) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const target = dataRows.find(r => r.id === id);
+    if (!target) throw new Error('not_found');
+    const today = formatDateISO(new Date());
+    const row = [id, item.name, item.category, item.stock, item.unit, item.threshold, today, item.memo];
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: fileId,
+      range: `Sheet1!A${target.sheetRow}:H${target.sheetRow}`,
+      valueInputOption: 'RAW',
+      resource: { values: [row] }
+    });
+    await loadData();
+    showToast('更新しました');
+    resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function adjustStock(id, delta) {
+  if (isWriting) return;
+  const target = dataRows.find(r => r.id === id);
+  if (!target) return;
+  const newStock = Math.max(0, target.stock + delta);
+  if (newStock === target.stock) return;
+  setWriting(true);
+  try {
+    const today = formatDateISO(new Date());
+    // Update stock (col D) and updatedAt (col G)
+    await gapi.client.sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: fileId,
+      resource: {
+        valueInputOption: 'RAW',
+        data: [
+          { range: `Sheet1!D${target.sheetRow}`, values: [[newStock]] },
+          { range: `Sheet1!G${target.sheetRow}`, values: [[today]] }
+        ]
+      }
+    });
+    target.stock = newStock;
+    target.updatedAt = today;
+    render();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+async function deleteItemById(id) {
+  if (isWriting) return;
+  setWriting(true);
+  try {
+    const target = dataRows.find(r => r.id === id);
+    if (!target) throw new Error('not_found');
+    await gapi.client.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: fileId,
+      resource: {
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: 0, dimension: 'ROWS', startIndex: target.sheetRow - 1, endIndex: target.sheetRow }
+          }
+        }]
+      }
+    });
+    await loadData();
+    showToast('削除しました');
+    if (editingId === id) resetForm();
+  } catch (e) { handleApiError(e); }
+  finally { setWriting(false); }
+}
+
+function bindUI() {
+  $('btnLogin').addEventListener('click', () => {
+    if (!tokenClient) { showToast('まだ準備中です。少し待って再度お試しください。', true); return; }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  });
+  $('btnLogout').addEventListener('click', logout);
+  $('btnSave').addEventListener('click', handleSave);
+  $('btnCancel').addEventListener('click', resetForm);
+  $('sortFilter').addEventListener('change', render);
+  $('cancelDelete').addEventListener('click', () => { pendingDeleteId = null; $('confirmModal').classList.remove('show'); });
+  $('confirmDelete').addEventListener('click', () => {
+    const id = pendingDeleteId;
+    pendingDeleteId = null;
+    $('confirmModal').classList.remove('show');
+    if (id) deleteItemById(id);
+  });
+}
+
+function getStockStatus(r) {
+  if (r.stock === 0) return 'out';
+  if (r.stock <= r.threshold) return 'low';
+  return 'ok';
+}
+
+function render() {
+  const sort = $('sortFilter').value;
+  let sorted = [...dataRows];
+  if (sort === 'lowFirst') {
+    sorted.sort((a, b) => {
+      const sa = getStockStatus(a), sb = getStockStatus(b);
+      const order = { 'out': 0, 'low': 1, 'ok': 2 };
+      if (order[sa] !== order[sb]) return order[sa] - order[sb];
+      return a.stock - b.stock;
+    });
+  } else if (sort === 'nameAsc') {
+    sorted.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  } else if (sort === 'updatedDesc') {
+    sorted.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  } else if (sort === 'categoryAsc') {
+    sorted.sort((a, b) => (a.category || '').localeCompare(b.category || '', 'ja') || a.name.localeCompare(b.name, 'ja'));
+  }
+
+  const tbody = $('tableBody');
+  tbody.innerHTML = '';
+  sorted.forEach(r => {
+    const status = getStockStatus(r);
+    const tr = document.createElement('tr');
+    if (status === 'low') tr.className = 'low-stock';
+    if (status === 'out') tr.className = 'out-stock';
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(r.name)}</strong></td>
+      <td style="color:var(--sub);">${escapeHtml(r.category)}</td>
+      <td>
+        <div class="stock-control">
+          <button class="btn-stock" data-action="dec" data-id="${r.id}" ${r.stock === 0 ? 'disabled' : ''}>−</button>
+          <span class="stock-num">${formatNum(r.stock)} ${escapeHtml(r.unit)}</span>
+          <button class="btn-stock" data-action="inc" data-id="${r.id}">＋</button>
+        </div>
+      </td>
+      <td>${status === 'out' ? '<span class="badge badge-out">在庫切れ</span>' : status === 'low' ? '<span class="badge badge-low">在庫少</span>' : ''}</td>
+      <td style="color:var(--sub);font-size:0.78rem;">${escapeHtml(r.updatedAt)}</td>
+      <td style="color:var(--sub);font-size:0.8rem;">${escapeHtml(r.memo)}</td>
+      <td><div class="actions">
+        <button class="btn-icon" data-action="edit" data-id="${r.id}" title="編集">✎</button>
+        <button class="btn-icon danger" data-action="del" data-id="${r.id}" title="削除">×</button>
+      </div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const cardList = $('cardList');
+  cardList.innerHTML = '';
+  sorted.forEach(r => {
+    const status = getStockStatus(r);
+    const div = document.createElement('div');
+    div.className = 'data-card-item' + (status === 'low' ? ' low-stock' : '') + (status === 'out' ? ' out-stock' : '');
+    div.innerHTML = `
+      <div class="data-card-top">
+        <div class="data-card-name">${escapeHtml(r.name)}</div>
+        ${status === 'out' ? '<span class="badge badge-out">在庫切れ</span>' : status === 'low' ? '<span class="badge badge-low">在庫少</span>' : ''}
+      </div>
+      <div class="data-card-stock-line">
+        <button class="btn-stock" data-action="dec" data-id="${r.id}" ${r.stock === 0 ? 'disabled' : ''}>−</button>
+        <span class="stock-num">${formatNum(r.stock)} ${escapeHtml(r.unit)}</span>
+        <button class="btn-stock" data-action="inc" data-id="${r.id}">＋</button>
+      </div>
+      <div class="data-card-meta">
+        ${r.category ? `<span>${escapeHtml(r.category)}</span>` : ''}
+        <span>しきい値: ${formatNum(r.threshold)}</span>
+        <span>${escapeHtml(r.updatedAt)}</span>
+      </div>
+      ${r.memo ? `<div class="data-card-memo">${escapeHtml(r.memo)}</div>` : ''}
+      <div class="data-card-actions" style="margin-top:8px; justify-content:flex-end;">
+        <button class="btn-icon" data-action="edit" data-id="${r.id}">✎</button>
+        <button class="btn-icon danger" data-action="del" data-id="${r.id}">×</button>
+      </div>
+    `;
+    cardList.appendChild(div);
+  });
+
+  $('emptyState').style.display = sorted.length === 0 ? 'block' : 'none';
+  $('dataTable').style.display = sorted.length === 0 ? 'none' : '';
+
+  document.querySelectorAll('[data-action="inc"]').forEach(btn => {
+    btn.addEventListener('click', () => adjustStock(btn.dataset.id, 1));
+  });
+  document.querySelectorAll('[data-action="dec"]').forEach(btn => {
+    btn.addEventListener('click', () => adjustStock(btn.dataset.id, -1));
+  });
+  document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(btn.dataset.id));
+  });
+  document.querySelectorAll('[data-action="del"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingDeleteId = btn.dataset.id;
+      $('confirmModal').classList.add('show');
+    });
+  });
+
+  const count = dataRows.length;
+  const low = dataRows.filter(r => getStockStatus(r) === 'low').length;
+  const out = dataRows.filter(r => getStockStatus(r) === 'out').length;
+  $('sumCount').textContent = formatNum(count);
+  $('sumLow').textContent = formatNum(low);
+  $('sumOut').textContent = formatNum(out);
+}
+
+function startEdit(id) {
+  const r = dataRows.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  $('fName').value = r.name;
+  $('fCategory').value = r.category;
+  $('fStock').value = r.stock;
+  $('fUnit').value = r.unit;
+  $('fThreshold').value = r.threshold;
+  $('fMemo').value = r.memo;
+  $('formTitle').textContent = '商品を編集';
+  $('btnSave').textContent = '更新する';
+  $('btnCancel').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  editingId = null;
+  $('fName').value = '';
+  $('fCategory').value = '';
+  $('fStock').value = '0';
+  $('fUnit').value = '個';
+  $('fThreshold').value = '3';
+  $('fMemo').value = '';
+  $('formTitle').textContent = 'あたらしい商品';
+  $('btnSave').textContent = '登録する';
+  $('btnCancel').style.display = 'none';
+}
+
+function handleSave() {
+  const item = {
+    name: $('fName').value.trim(),
+    category: $('fCategory').value.trim(),
+    stock: parseInt($('fStock').value, 10) || 0,
+    unit: $('fUnit').value.trim() || '個',
+    threshold: parseInt($('fThreshold').value, 10) || 0,
+    memo: $('fMemo').value.trim()
+  };
+  if (!item.name) { showToast('商品名を入力してください', true); return; }
+  if (item.stock < 0) { showToast('在庫数は0以上にしてください', true); return; }
+  if (editingId) updateItemById(editingId, item);
+  else addItem(item);
+}
+
+function setWriting(on) {
+  isWriting = on;
+  ['btnSave', 'btnCancel', 'btnLogout'].forEach(id => { if ($(id)) $(id).disabled = on; });
+  document.querySelectorAll('.btn-icon, .btn-stock').forEach(b => b.disabled = on);
+  $('btnSave').textContent = on ? '保存中…' : (editingId ? '更新する' : '登録する');
+}
+
+function logout() {
+  if (accessToken && google && google.accounts && google.accounts.oauth2) {
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  accessToken = null;
+  fileId = null;
+  dataRows = [];
+  userEmail = '';
+  localStorage.removeItem(`${ENU_CONFIG.appId}_fileId`);
+  showWelcome();
+}
+
+function handleApiError(e) {
+  const status = e && (e.status || (e.result && e.result.error && e.result.error.code));
+  if (status === 401 || status === 403) {
+    showToast('ログインの有効期限が切れました。再ログインしてください。', true);
+    setTimeout(() => logout(), 1800);
+  } else {
+    showToast('通信エラーが発生しました', true);
+  }
+}
+
+function showScreen(name) {
+  $('loading').style.display = name === 'loading' ? 'flex' : 'none';
+  $('welcome').style.display = name === 'welcome' ? 'flex' : 'none';
+  $('app').style.display = name === 'app' ? 'block' : 'none';
+}
+function showWelcome() { showScreen('welcome'); }
+function showApp() {
+  showScreen('app');
+  $('userEmail').textContent = userEmail;
+}
+function showToast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+function formatDateISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function formatNum(n) { return Number(n || 0).toLocaleString('ja-JP'); }
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+</script>
+</body>
+</html>
