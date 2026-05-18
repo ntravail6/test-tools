@@ -434,7 +434,8 @@ async function initSheetFile() {
     fileId = searchRes.result.files[0].id;
   } else {
     const createRes = await gapi.client.sheets.spreadsheets.create({
-      properties: { title: FILE_NAME }
+      properties: { title: FILE_NAME },
+      sheets: [{ properties: { title: 'Sheet1' } }]
     });
     fileId = createRes.result.spreadsheetId;
     await gapi.client.sheets.spreadsheets.values.update({
