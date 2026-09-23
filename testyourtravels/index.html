@@ -481,7 +481,8 @@
 
   .section-body { padding: 4px 20px 20px; }
 
-  .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+  /* tiles stay wide enough for a long country name on one line */
+  .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
 
   .flag-tile {
     display: flex;
@@ -513,6 +514,8 @@
     overflow: hidden;
   }
   .ft-count { font-size: 10.5px; font-weight: 500; color: var(--v4); letter-spacing: 0.05em; margin-top: auto; }
+  /* long names split into two even lines instead of leaving one character alone */
+  .ft-name { text-wrap: balance; word-break: auto-phrase; }
   .ft-name.long { font-size: 10.5px; }
   .ft-name.xlong { font-size: 9.5px; }
 
@@ -2397,6 +2400,8 @@
   @media (max-width: 360px) { dd.pk-warn > span { flex-direction: column; gap: 2px; } dd.pk-warn > span > .pk-severe { align-self: flex-start; margin-right: 0; } }
   /* English values and notes: no single word left alone on the last line */
   html[lang="en"] .pk-rows dd, html[lang="en"] .pk-rows dd span, html[lang="en"] .pk-fact dd, html[lang="en"] .pk-fact dd span { text-wrap: balance; }
+  /* …except the customs items, which fill each line (set above) */
+  html[lang="en"] .pk-fact dd .pk-ng-item, html[lang="en"] .pk-fact dd .pk-ng-item span, html[lang="en"] .pk-fact dd .pk-ng-item div, html[lang="en"] .pk-rows dd.pk-warn span { text-wrap: wrap; }
   /* tag: a line between the dates and the countdown, like the other tickets */
   .tag-foot { margin-top: calc(var(--u) * 10); padding-top: calc(var(--u) * 10); border-top: 0.5px solid var(--border); }
 </style>
@@ -4439,9 +4444,41 @@
   }
 
   // Long names get a smaller size so most fit on one line (wide Latin letters count as half)
+  // Long Japanese names are set a little smaller so they stay on one line
+  // (English names wrap between words, so they are left alone)
   function nameSize(n) {
-    const w = [...n].reduce((sum, ch) => sum + (/[\u0000-\u024F]/.test(ch) ? 0.55 : 1), 0);
-    return '';
+    const cjk = [...n].filter(ch => !/[\u0000-\u024F]/.test(ch)).length;
+    if (!cjk) return '';
+    return cjk > 9 ? ' xlong' : cjk > 7 ? ' long' : '';
+  }
+
+  // After the tiles are drawn, any name that still wraps is set one step smaller
+  // (the width depends on the screen and the font, so it is measured rather than guessed)
+  function fitTileNames(list) {
+    const shrink = () => list.querySelectorAll('.ft-name').forEach(el => {
+      // names with spaces (English) wrap neatly between words, so they are left as they are
+      if (/\s/.test(el.textContent.trim())) return;
+      const lines = () => {
+        const r = document.createRange();
+        r.selectNodeContents(el);
+        return new Set([...r.getClientRects()].map(x => Math.round(x.top))).size;
+      };
+      if (lines() > 1 && !el.classList.contains('long') && !el.classList.contains('xlong')) el.classList.add('long');
+      if (lines() > 1 && el.classList.contains('long')) { el.classList.remove('long'); el.classList.add('xlong'); }
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(shrink));
+    else requestAnimationFrame(shrink);
+    if (!list.dataset.fitBound) {
+      list.dataset.fitBound = '1';
+      let timer;
+      window.addEventListener('resize', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          list.querySelectorAll('.ft-name').forEach(el => el.classList.remove('long', 'xlong'));
+          requestAnimationFrame(shrink);
+        }, 150);
+      });
+    }
   }
 
   // A tile: big flag, the name, and (for places you've been) how many times
@@ -4472,6 +4509,7 @@
     count.textContent = t('places')(arr.length);
     arr.sort((a, b) => b.count - a.count || displayName(a.id, a.name).localeCompare(displayName(b.id, b.name), currentLang));
     list.innerHTML = arr.map(c => flagTile(c.id, c.name, t('searchResultTrips')(c.count))).join('');
+    fitTileNames(list);
     list.querySelectorAll('.flag-tile').forEach(chip => {
       chip.addEventListener('click', () => openSheet(chip.dataset.countryId, chip.dataset.countryName));
     });
@@ -4485,6 +4523,7 @@
     section.style.display = '';
     count.textContent = t('wishCount')(state.bucketList.length);
     list.innerHTML = state.bucketList.map(w => flagTile(w.countryId, w.countryName, '', true)).join('');
+    fitTileNames(list);
     list.querySelectorAll('.flag-tile').forEach(chip => {
       chip.addEventListener('click', () => openSheet(chip.dataset.countryId, chip.dataset.countryName));
     });
@@ -6664,4 +6703,3 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 </script>
 </body>
 </html>
-
