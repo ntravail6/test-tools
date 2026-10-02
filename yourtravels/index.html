@@ -192,6 +192,10 @@
   /* 保存のほうに、ストーリーの大きさをそっと添える */
   .card-btn small { font-size: 9.5px; letter-spacing: 1.6px; color: var(--text-muted); margin-top: 3px;
                     font-variant-numeric: tabular-nums; }
+  .card-hint { text-align: center; }
+  .card-hint:empty { display: none; }
+  .card-note { font-size: 11.5px; color: var(--text-muted); line-height: 1.7; margin: 10px 0 0; text-align: center; }
+
   .card-toast { margin-top: 10px; background: var(--text); color: var(--bg); border-radius: 12px;
                 padding: 12px 14px; font-size: 12.5px; text-align: center; }
   .card-toast[hidden] { display: none; }
@@ -12267,12 +12271,13 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       x: 0, y: 0, vx: 0, vy: 0,
       ph: i * 1.7, ph2: i * 2.3 + 0.8,
       sp: 0.13 + (i % 4) * 0.038,     // ゆれの速さ（遅いほど水らしい）
-      amp: 2.2 + (i % 3) * 1.1        // ゆれの大きさ
+      // ゆれの大きさ。手前のものほど大きく揺らすと、奥行きが出て「動いている」と分かる
+      amp: (5 + (i % 3) * 3) * p[1]
     });
   });
   if (!items.length) return;
 
-  var REACH = 16;                     // 傾けきったときに流れる距離（px・手前のもの）
+  var REACH = 30;                     // 傾けきったときに流れる距離（px・手前のもの）
   var tx = 0, ty = 0, raf = 0, t0 = 0;
   var clamp = function (v) { return v < -1 ? -1 : v > 1 ? 1 : v; };
   function aim(x, y) { tx = clamp(x); ty = clamp(y); }
@@ -12334,20 +12339,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   // 「はじめる」などを押したときにだけ聞く（1回ゆるせば、次からは聞かれない）。
   //   ※ Chrome も requestPermission を持っているので、有無では見分けられない。
   //      どちらでも困らないように「先に聞く」ではなく「両方やる」形にしている。
-  var D = window.DeviceOrientationEvent;
-  if (D && typeof D.requestPermission === 'function') {
-    var asked = false;
-    var askOnce = function () {
-      if (asked) return;
-      asked = true;
-      try { D.requestPermission().then(function (r) { if (r === 'granted') listen(); }).catch(function () {}); }
-      catch (e) {}
-    };
-    ['intro-go', 'intro-sample', 'intro-demo'].forEach(function (id) {
-      var b = document.getElementById(id);
-      if (b) b.addEventListener('click', askOnce);
-    });
-  }
+  // iPhone は「ゆるす」を押さないと傾きを読めない決まり（Appleが決めていて、省けない）。
+  // そこで、こちらからは何も聞かない。
+  //   ・傾きが読める端末（Android・パソコン）では、そのまま傾きで動く
+  //   ・読めない端末（iPhone）では、ひとりでに漂う動き＋指でなぞった動きだけになる
+  // どちらでも「止まって見える」ことはない。
 
   window.introFloatStop = stop;   // 確認用
 })();
@@ -12887,8 +12883,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     el('card-now').textContent = invite ? (isEnLang() ? 'Card to share the app' : 'アプリを教えるカード')
       : (list[at] ? (isEnLang() ? (list[at].nameEn || list[at].name) : list[at].name) : '');
     el('card-nav').hidden = invite || list.length < 2;
-    el('card-invite-row').hidden = invite;
-    el('card-back-row').hidden = !invite;
+    drawButtons();
     if (!invite) savePick();
   }
 
@@ -12929,27 +12924,64 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     clearTimeout(toast._t);
     toast._t = setTimeout(function () { t.hidden = true; }, 3200);
   }
-  function save() {
+  // この端末で「画像を渡す画面」が出せるか
+  //   スマホの写真（カメラロール）に入れるには、ブラウザからは直接書き込めないので、
+  //   いったん共有画面を出して、その中の「画像を保存」を選んでもらうしかない。
+  function canSendFile() {
+    try {
+      var f = new File([new Blob([''], { type: 'image/png' })], 'a.png', { type: 'image/png' });
+      return !!(navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share);
+    } catch (e) { return false; }
+  }
+  function download(b) {
+    var url = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = url; a.download = fileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+  // 写真に保存（共有画面の「画像を保存」から）。出せない端末はファイルとして保存
+  function toPhotos() {
     var c = currentCanvas(); if (!c) return;
     toBlob(c).then(function (b) {
-      var url = URL.createObjectURL(b), a = document.createElement('a');
-      a.href = url; a.download = fileName();
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-      toast(isEnLang() ? 'Image saved' : '画像を保存しました');
+      if (canSendFile()) {
+        var f = new File([b], fileName(), { type: 'image/png' });
+        navigator.share({ files: [f] }).catch(function () {});
+      } else {
+        download(b);
+        toast(isEnLang() ? 'Image saved' : '画像を保存しました');
+      }
     });
   }
-  function share() {
+  // ファイルとして保存（パソコンや、写真に入れたくないとき）
+  function saveFile() {
     var c = currentCanvas(); if (!c) return;
     toBlob(c).then(function (b) {
-      var f = new File([b], fileName(), { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [f] })) {
-        navigator.share({ files: [f] }).catch(function () {});
-      } else { save(); }
+      download(b);
+      toast(isEnLang() ? 'Saved as a file' : 'ファイルとして保存しました');
     });
   }
 
   // ── 画面を組み立てる ────────────────────────────────
+  // ボタンは2つならべる：「写真に保存」と「このアプリを教える」
+  function drawButtons() {
+    var en = isEnLang(), box = el('card-btns'), hint = el('card-hint');
+    if (!box) return;
+    var phone = canSendFile();
+    var saveLabel = phone ? (en ? 'Save to Photos' : '写真に保存') : (en ? 'Save image' : '画像を保存');
+    var rightLabel = invite ? (en ? 'Back to my cards' : 'カードにもどる')
+                            : (en ? 'Share this app' : 'このアプリを教える');
+    box.innerHTML =
+      '<button type="button" class="card-btn fill" id="card-save2"><span>' + saveLabel + '</span><small>1080 × 1920</small></button>' +
+      '<button type="button" class="card-btn line" id="card-toggle">' + rightLabel + '</button>';
+    el('card-save2').addEventListener('click', phone ? toPhotos : saveFile);
+    el('card-toggle').addEventListener('click', function () { invite = !invite; show(); });
+    // スマホは、共有画面の中で「画像を保存」を選んでもらう必要がある
+    hint.innerHTML = phone
+      ? '<p class="card-note">' + (en ? 'Pick “Save Image” in the sheet that opens.'
+          : '出てきた画面で「画像を保存」をえらぶと、写真に入ります。') + '</p>'
+      : '';
+  }
+
   function build() {
     if (el('card-modal')) return;
     var en = isEnLang();
@@ -12967,17 +12999,10 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
           '<button type="button" id="card-next" aria-label="' + (en ? 'Next' : '次へ') + '">›</button>' +
         '</div>' +
         '<div class="card-dots" id="card-dots"></div>' +
-        '<div class="card-btns">' +
-          '<button type="button" class="card-btn line" id="card-save"><span>' + (en ? 'Save image' : '画像を保存') + '</span><small>1080 × 1920</small></button>' +
-          '<button type="button" class="card-btn fill" id="card-share">' + (en ? 'Share image' : '画像を共有') + '</button>' +
-        '</div>' +
+        '<div class="card-btns" id="card-btns"></div>' +
+        '<div class="card-hint" id="card-hint"></div>' +
         '<div class="card-toast" id="card-toast" hidden></div>' +
-        '<div class="card-foot" id="card-invite-row">' +
-          '<button type="button" class="foot-link" id="card-invite">' + (en ? 'Share this app' : 'このアプリを教える') + '</button>' +
-        '</div>' +
-        '<div class="card-foot" id="card-back-row" hidden>' +
-          '<button type="button" class="foot-link" id="card-tocards">' + (en ? 'Back to my cards' : '自分の記録のカードへ') + '</button>' +
-        '</div>' +
+
       '</div>';
     var wrap = document.createElement('div');
     wrap.className = 'popup-backdrop list-modal card-modal';
@@ -12989,10 +13014,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
     el('card-prev').addEventListener('click', function () { at = (at - 1 + list.length) % list.length; show(); });
     el('card-next').addEventListener('click', function () { at = (at + 1) % list.length; show(); });
-    el('card-save').addEventListener('click', save);
-    el('card-share').addEventListener('click', share);
-    el('card-invite').addEventListener('click', function () { invite = true; show(); });
-    el('card-tocards').addEventListener('click', function () { invite = false; show(); });
+    drawButtons();
     // 指で横にはらっても変わる
     var sx = null;
     var st = el('card-stage');
