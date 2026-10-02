@@ -157,6 +157,63 @@
   .intro[hidden] { display: none; }
   .intro-in { max-width: 420px; margin: auto; text-align: center; animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
+  /* レベルの帯の右の「画像を作る」。帯ぜんたいが押せるので、重ならないように上に出す */
+  /* 1行に入らず折り返したときも、右端にそろえる（margin-left:auto） */
+  .lv-card-btn { flex: none; align-self: center; margin: 6px 0 0 auto; position: relative; z-index: 1;
+    font-family: var(--font); font-size: 11px; letter-spacing: 0.08em; padding: 6px 12px;
+    border: none; border-radius: 100px; background: transparent; color: var(--v4);
+    box-shadow: inset 0 0 0 1px var(--border-strong); cursor: pointer; white-space: nowrap; }
+  .lv-card-btn:hover { box-shadow: inset 0 0 0 1px var(--v3); background: var(--surface); }
+
+  /* ── SNSに出す画像を作るポップアップ ───────────────────────── */
+  .card-modal .card-inner { display: flex; flex-direction: column; }
+  .card-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+                margin: 4px 0 10px; touch-action: pan-y; }
+  /* 1080×1920 の絵を、入る大きさまで縮めて見せる（保存されるのは原寸） */
+  .card-canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block;
+                 border-radius: 10px; box-shadow: 0 6px 20px rgba(90, 71, 56, 0.16); }
+  .card-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .card-nav[hidden] { display: none; }
+  .card-nav button { width: 38px; height: 38px; border-radius: 50%; border: 0.5px solid var(--border-strong);
+      background: transparent; color: var(--text); font-family: var(--font); font-size: 16px; line-height: 1; cursor: pointer; }
+  .card-nav button:hover { border-color: var(--v3); color: var(--v4); }
+  .card-now { flex: 1; text-align: center; font-size: 12.5px; color: var(--text-sub); }
+  .card-dots { display: flex; gap: 5px; justify-content: center; margin-bottom: 12px; }
+  .card-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); display: block; }
+  .card-dots i.on { background: var(--v4); width: 16px; border-radius: 3px; }
+  .card-btns { display: flex; gap: 8px; }
+  .card-btn { flex: 1; min-height: 50px; border-radius: 12px; border: none; font-family: var(--font);
+      font-size: 14px; letter-spacing: 0.1em; cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; line-height: 1.25; }
+  .card-btn.fill { background: var(--v3); color: #fff; }
+  .card-btn.fill:hover { background: #A57080; }
+  .card-btn.line { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
+  .card-btn.line:hover { box-shadow: inset 0 0 0 1px var(--v3); }
+  /* 保存のほうに、ストーリーの大きさをそっと添える */
+  .card-btn small { font-size: 9.5px; letter-spacing: 1.6px; color: var(--text-muted); margin-top: 3px;
+                    font-variant-numeric: tabular-nums; }
+  .card-toast { margin-top: 10px; background: var(--text); color: var(--bg); border-radius: 12px;
+                padding: 12px 14px; font-size: 12.5px; text-align: center; }
+  .card-toast[hidden] { display: none; }
+  .card-foot { text-align: center; margin-top: 12px; }
+  .card-foot[hidden] { display: none; }
+
+  /* ── 最初の画面：水に浮いているように、傾けると動く ──────────────
+     奥のもの（うすい光・ロゴ）はゆっくり小さく、手前のもの（ボタン）は大きく動かすと
+     重なって浮いているように見える。動かす量は JavaScript が --fx / --fy に入れる。
+     指で動かすこともできる。動きを控える設定の人には出さない。 */
+  .intro-float { will-change: transform;
+    transform: translate3d(var(--fx, 0px), var(--fy, 0px), 0) rotate(var(--fr, 0deg)); }
+  .intro-glow { position: absolute; inset: -14%; pointer-events: none; z-index: -1;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 50% 12%, rgba(197, 145, 157, 0.13) 0%, transparent 60%),
+      radial-gradient(ellipse 700px 400px at 86% 30%, rgba(217, 165, 82, 0.09) 0%, transparent 60%); }
+  /* 光の板を別に出すので、画面そのものの背景の絵は消す */
+  .intro.has-float { background-image: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .intro-float { transform: none !important; }
+  }
+
   .intro-badge {
     display: inline-block;
     font-size: 10px;
@@ -4285,6 +4342,7 @@ window.dataUpdatedText = function (en) {
       <span class="lv-mark">Lv.</span><b class="lv-num" id="lv-world-num">1</b><span class="lv-of">/ 10</span>
       <span class="lv-name" id="lv-world-name"></span>
       <span class="lv-rest" id="lv-world-rest"></span>
+      <button type="button" class="lv-card-btn" id="card-make-world" data-i18n="cardMake">Make an image</button>
     </div>
     <span class="lv-bar"><i id="lv-world-fill"></i></span>
     <span class="xp-note" id="xp-world-note"></span>
@@ -4402,6 +4460,7 @@ window.dataUpdatedText = function (en) {
       <span class="lv-mark">Lv.</span><b class="lv-num" id="lv-japan-num">1</b><span class="lv-of">/ 10</span>
       <span class="lv-name" id="lv-japan-name"></span>
       <span class="lv-rest" id="lv-japan-rest"></span>
+      <button type="button" class="lv-card-btn" id="card-make-japan" data-i18n="cardMake">Make an image</button>
     </div>
     <span class="lv-bar"><i id="lv-japan-fill"></i></span>
     <span class="xp-note" id="xp-japan-note"></span>
@@ -5362,6 +5421,7 @@ window.dataUpdatedText = function (en) {
       howtoBadge: 'Badges',
       howtoBadge1: 'Badges only use what you record, so a badge you can never earn is never shown.',
       howtoSeeBadges: 'See all badges',
+      cardMake: 'Make an image',
       setGroupFix: 'Fixing a mistake',
       resetTitle1: 'What will be deleted',
       resetTitle2: 'Are you sure?',
@@ -5579,6 +5639,7 @@ window.dataUpdatedText = function (en) {
       howtoBadge: 'バッジ',
       howtoBadge1: '記録しているものからだけ選ばれます。取れないバッジは出ません。',
       howtoSeeBadges: 'バッジを全部見る',
+      cardMake: '画像を作る',
       setGroupFix: 'まちがえたとき',
       resetTitle1: '消えるもの',
       resetTitle2: '本当に削除しますか？',
@@ -7528,6 +7589,8 @@ window.dataUpdatedText = function (en) {
     text.textContent = (currentLang === 'ja' ? 'バッジ ' : 'Badges ') + got.length + ' / ' + list.length;
   }
   window.renderBadgeStripShared = renderBadgeStrip;
+  // 画像を作る機能から、国の名前と旗を使うための橋渡し
+  window.worldNameAPI = { displayName, flagFor, iso2 };
   ['world', 'japan'].forEach(side => {
     const b = document.getElementById('badge-strip-' + side);
     if (b) b.addEventListener('click', e => { e.stopPropagation(); openBadges(); });
@@ -7543,6 +7606,15 @@ window.dataUpdatedText = function (en) {
     b.addEventListener('click', openBadges);
   });
   window.openBadgesShared = openBadges;
+  // レベルの帯の右の「画像を作る」。帯ぜんたいは「バッジ一覧」なので、押し分ける
+  ['world', 'japan'].forEach(function (side) {
+    var b = document.getElementById('card-make-' + side);
+    if (!b) return;
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (window.openShareCard) window.openShareCard(side);
+    });
+  });
 
   window.applyDetailShared = applyDetail;
   window.tShared = t;
@@ -12153,6 +12225,789 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     if (saved === 'japan') setMap('japan', false);
   })();
 </script>
+<script>
+// ── 最初の画面：水に浮いているように、傾けると動く ─────────────────
+//   ばねと水の抵抗で動かすので、傾けた向きへ少し遅れて流れ、少し行き過ぎてから戻る。
+//   傾けていなくても、ゆらゆら漂いつづける。
+//   数値は _check/floatsim.py で合わせた（0.5秒で半分ほど流れ、17%行き過ぎ、2.2秒でおちつく）。
+(function () {
+  var intro = document.getElementById('intro');
+  if (!intro) return;
+  // 動きを控える設定の人には出さない
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  } catch (e) {}
+
+  var K = 0.0018, DAMP = 0.960;   // 水の中のように、ゆっくり
+
+  // 浮かせるもの：奥のものほど depth を小さく（ゆっくり小さく動く）
+  var glow = document.createElement('div');
+  glow.className = 'intro-glow intro-float';
+  intro.insertBefore(glow, intro.firstChild);
+  intro.classList.add('has-float');
+
+  var picks = [
+    [glow, 0.30, 0.5],
+    ['.intro-badge', 0.55, 1.0],
+    ['.intro .brand', 0.70, 1.0],
+    ['.intro .tagline', 0.80, 1.1],
+    ['.intro-lead', 0.95, 1.1],
+    ['.intro-cards', 1.15, 1.2],
+    ['#intro-go', 1.45, 1.4],
+    ['#intro-choice', 1.45, 1.4],
+    ['.intro-more', 1.30, 1.3]
+  ];
+  var items = [];
+  picks.forEach(function (p, i) {
+    var el = typeof p[0] === 'string' ? intro.querySelector(p[0]) : p[0];
+    if (!el) return;
+    el.classList.add('intro-float');
+    items.push({
+      el: el, depth: p[1], rot: p[2],
+      x: 0, y: 0, vx: 0, vy: 0,
+      ph: i * 1.7, ph2: i * 2.3 + 0.8,
+      sp: 0.13 + (i % 4) * 0.038,     // ゆれの速さ（遅いほど水らしい）
+      amp: 2.2 + (i % 3) * 1.1        // ゆれの大きさ
+    });
+  });
+  if (!items.length) return;
+
+  var REACH = 16;                     // 傾けきったときに流れる距離（px・手前のもの）
+  var tx = 0, ty = 0, raf = 0, t0 = 0;
+  var clamp = function (v) { return v < -1 ? -1 : v > 1 ? 1 : v; };
+  function aim(x, y) { tx = clamp(x); ty = clamp(y); }
+
+  function frame(now) {
+    if (!t0) t0 = now;
+    var t = (now - t0) / 1000;
+    for (var i = 0; i < items.length; i++) {
+      var c = items[i];
+      var gx = tx * REACH * c.depth, gy = ty * REACH * c.depth;
+      c.vx = (c.vx + (gx - c.x) * K) * DAMP;
+      c.vy = (c.vy + (gy - c.y) * K) * DAMP;
+      c.x += c.vx; c.y += c.vy;
+      var bx = Math.sin(t * c.sp + c.ph) * c.amp * 0.6;
+      var by = Math.sin(t * c.sp * 0.78 + c.ph2) * c.amp;
+      var e = c.el.style;
+      e.setProperty('--fx', (c.x + bx).toFixed(2) + 'px');
+      e.setProperty('--fy', (c.y + by).toFixed(2) + 'px');
+      e.setProperty('--fr', (Math.sin(t * c.sp * 0.52 + c.ph) * 0.30 * c.rot + c.vx * 0.22 * c.rot).toFixed(3) + 'deg');
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function stop() {
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    items.forEach(function (c) {
+      c.el.style.removeProperty('--fx');
+      c.el.style.removeProperty('--fy');
+      c.el.style.removeProperty('--fr');
+    });
+  }
+  function start() { if (!raf) { t0 = 0; raf = requestAnimationFrame(frame); } }
+
+  // 最初の画面が出ているあいだだけ動かす（消えたら止める）
+  function sync() { if (intro.hidden) stop(); else start(); }
+  sync();
+  new MutationObserver(sync).observe(intro, { attributes: true, attributeFilter: ['hidden'] });
+  document.addEventListener('visibilitychange', function () { document.hidden ? stop() : sync(); });
+
+  // 指やマウスを動かしても動く（傾きが読めない端末のため）
+  intro.addEventListener('pointermove', function (e) {
+    aim(e.clientX / innerWidth * 2 - 1, e.clientY / innerHeight * 2 - 1);
+  }, { passive: true });
+  intro.addEventListener('pointerleave', function () { aim(0, 0); });
+
+  // 傾き（ジャイロ）で動かす
+  var listening = false;
+  function listen() {
+    if (listening) return;        // ゆるされたあとに2回つかないように
+    listening = true;
+    window.addEventListener('deviceorientation', function (e) {
+      if (e.gamma == null && e.beta == null) return;
+      aim((e.gamma || 0) / 26, ((e.beta || 0) - 40) / 26);
+    }, { passive: true });
+  }
+  // まず、そのまま読めるかためす（Android やパソコンはこれで動く）
+  listen();
+  // iPhone は一度ゆるしてもらう必要がある。最初の画面では聞かず、
+  // 「はじめる」などを押したときにだけ聞く（1回ゆるせば、次からは聞かれない）。
+  //   ※ Chrome も requestPermission を持っているので、有無では見分けられない。
+  //      どちらでも困らないように「先に聞く」ではなく「両方やる」形にしている。
+  var D = window.DeviceOrientationEvent;
+  if (D && typeof D.requestPermission === 'function') {
+    var asked = false;
+    var askOnce = function () {
+      if (asked) return;
+      asked = true;
+      try { D.requestPermission().then(function (r) { if (r === 'granted') listen(); }).catch(function () {}); }
+      catch (e) {}
+    };
+    ['intro-go', 'intro-sample', 'intro-demo'].forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', askOnce);
+    });
+  }
+
+  window.introFloatStop = stop;   // 確認用
+})();
+</script>
+
+<script>
+// ── SNSに出す画像（ストーリー 1080×1920）───────────────────────────
+//   見本（_check/SNS画像案-ストーリー.html）で決めた形を、そのまま絵にして描く。
+//   画面に出している絵と、保存される絵は「同じ1枚」なので、見た目がずれない。
+//   外から道具は読み込まない。端末の中だけで作る。
+(function () {
+  var W = 1080, H = 1920;
+  var C = {
+    bg: '#FBF6F0', surface: '#ffffff', text: '#5A4738', sub: '#7A6552', muted: '#9C8878',
+    line: 'rgba(90,71,56,0.10)', line2: 'rgba(90,71,56,0.20)', land: '#EDE0D8',
+    v0: '#F3E7DD', v2: '#EBAAB0', v3: '#C5919D', v4: '#915666',
+    gold: '#F6E8CE', goldLine: 'rgba(217,165,82,0.5)', goldInk: '#D6B97B',
+    ink: '#5A4738', paper: '#F7F0E8', ppRed: '#8B2634', ppNavy: '#1E2B50'
+  };
+  var SANS = '"Futura","Futura PT","Jost","Kosugi Maru",sans-serif';
+  var MIN  = '"Shippori Mincho","Yu Mincho",serif';
+
+  // ── 描くための小さな道具 ───────────────────────────────
+  function rr(g, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    g.beginPath();
+    g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.arcTo(x + w, y, x + w, y + r, r);
+    g.lineTo(x + w, y + h - r); g.arcTo(x + w, y + h, x + w - r, y + h, r);
+    g.lineTo(x + r, y + h); g.arcTo(x, y + h, x, y + h - r, r);
+    g.lineTo(x, y + r); g.arcTo(x, y, x + r, y, r);
+    g.closePath();
+  }
+  // 字の間（letter-spacing）。使えないブラウザでは1字ずつ置く
+  function setFont(g, o) {
+    g.font = (o.weight || 400) + ' ' + o.size + 'px ' + (o.font || SANS);
+    g.fillStyle = o.color || C.text;
+    g.textBaseline = o.baseline || 'alphabetic';
+  }
+  function measure(g, s, o) {
+    setFont(g, o);
+    var w = g.measureText(s).width;
+    if (o.ls) w += o.ls * Math.max(0, s.length - 1);
+    return w;
+  }
+  function text(g, s, x, y, o) {
+    o = o || {};
+    setFont(g, o);
+    var ls = o.ls || 0;
+    var w = measure(g, s, o);
+    var sx = o.align === 'center' ? x - w / 2 : o.align === 'right' ? x - w : x;
+    if (!ls) { g.textAlign = 'left'; g.fillText(s, sx, y); return w; }
+    g.textAlign = 'left';
+    for (var i = 0; i < s.length; i++) { g.fillText(s[i], sx, y); sx += g.measureText(s[i]).width + ls; }
+    return w;
+  }
+  // 折り返して書く。返り値は書いた行数
+  function para(g, s, x, y, o) {
+    o = o || {};
+    var maxW = o.maxW || W, lh = o.lh || o.size * 1.6, n = 0, line = '';
+    var push = function () {
+      if (line) { text(g, line, x, y + n * lh, o); n++; line = ''; }
+    };
+    var parts = String(s).split('\n');
+    for (var p = 0; p < parts.length; p++) {
+      var chars = parts[p].split('');
+      for (var i = 0; i < chars.length; i++) {
+        var t = line + chars[i];
+        if (measure(g, t, o) > maxW && line) { text(g, line, x, y + n * lh, o); n++; line = chars[i]; }
+        else line = t;
+      }
+      push();
+    }
+    return n;
+  }
+  function emoji(g, ch, x, y, size, align) {
+    g.font = size + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    g.textBaseline = 'middle';
+    g.textAlign = align || 'center';
+    g.fillText(ch, x, y);
+    g.textAlign = 'left';
+    g.textBaseline = 'alphabetic';
+  }
+  function badge(g, x, y, r, ch, got) {
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2);
+    if (got) { g.fillStyle = C.gold; g.fill(); g.strokeStyle = C.goldLine; g.lineWidth = 2; g.stroke(); }
+    else { g.strokeStyle = C.line2; g.lineWidth = 2; g.setLineDash([6, 5]); g.stroke(); g.setLineDash([]); }
+    g.save(); g.globalAlpha = got ? 1 : 0.28;
+    emoji(g, ch, x, y + 1, r * 1.05);
+    g.restore();
+  }
+  function bar(g, x, y, w, h, pct, back, fill) {
+    g.fillStyle = back || C.land; rr(g, x, y, w, h, h / 2); g.fill();
+    if (pct > 0) { g.fillStyle = fill || C.v4; rr(g, x, y, Math.max(h, w * pct / 100), h, h / 2); g.fill(); }
+  }
+  function rule(g, x, y, w, col) { g.fillStyle = col || C.line2; g.fillRect(x, y, w, 1.5); }
+
+  // 大きい数字＋小さい分母＋下のラベル を3つならべる段
+  function nums(g, rows, y, opt) {
+    opt = opt || {};
+    var pad = opt.pad || 96, cw = (W - pad * 2) / rows.length;
+    rows.forEach(function (r, i) {
+      var cx = pad + cw * i + cw / 2;
+      if (i) { g.fillStyle = opt.lineCol || C.line2; g.fillRect(pad + cw * i, y - 58, 1.5, 86); }
+      var numCol = opt.numCol || C.v3;
+      var big = String(r[0]), small = r[1] || '';
+      var wb = measure(g, big, { size: 82, weight: 300, ls: -2, font: SANS });
+      var ws = small ? measure(g, small, { size: 28, font: SANS }) : 0;
+      var sx = cx - (wb + ws) / 2;
+      text(g, big, sx, y, { size: 82, weight: 300, color: numCol, ls: -2, font: SANS });
+      if (small) text(g, small, sx + wb, y, { size: 28, color: opt.smallCol || C.muted, font: SANS });
+      text(g, r[2], cx, y + 50, { size: 25, color: opt.labCol || C.muted, align: 'center', ls: 2, font: opt.labFont || MIN });
+    });
+  }
+  function brand(g, y, col, align) {
+    text(g, 'YOUR TRAVELS', align === 'center' ? W / 2 : 96, y,
+      { size: 28, color: col || C.muted, ls: 11, align: align || 'left', font: SANS });
+  }
+
+  // ── いまの記録から、絵に出す数字を作る ───────────────────
+  // 日本語と英語の出しわけ
+  function T(d, ja, en) { return d.en ? en : ja; }
+  function readStore(k) { try { return JSON.parse(localStorage.getItem(k) || 'null') || {}; } catch (e) { return {}; } }
+
+  function collect(side) {
+    var K = window.kindAPI, L = window.levelAPI, B = window.badgeAPI, A = window.jpAreas;
+    var world = side === 'world';
+    var been = function (v) { return !K || K.KIND_COUNTED.indexOf(K.kindOf(v)) >= 0; };
+    var en = isEnLang();
+    var d = { side: side, mincho: true, en: en, year: new Date().getFullYear() };
+
+    if (world) {
+      var st = readStore('wanderlog-v3'), vs = st.visits || [];
+      var by = {};
+      vs.forEach(function (v) { (by[String(v.countryId)] = by[String(v.countryId)] || []).push(v); });
+      var ids = Object.keys(by).filter(function (id) { return by[id].some(been); });
+      var conts = {};
+      ids.forEach(function (id) { var c = L && L.continentOfCountry(id); if (c) conts[c] = (conts[c] || 0) + 1; });
+      var cities = {};
+      vs.filter(been).forEach(function (v) {
+        (v.cities && v.cities.length ? v.cities : (v.city ? [v.city] : [])).forEach(function (c) {
+          cities[String(v.countryId) + '|' + String(c).toLowerCase()] = 1; });
+      });
+      var N = window.worldNameAPI || {};
+      d.n = ids.length; d.of = 195;
+      d.sub = Object.keys(cities).length;
+      d.trips = vs.length;
+      d.nameN = en ? 'countries' : '国'; d.nameSub = en ? 'cities' : '都市';
+      d.unit = en ? '' : 'か国'; d.groupName = en ? 'continents' : '大陸';
+      d.groupLabels = ['アジア', 'ヨーロッパ', '北アメリカ', 'アフリカ', '南アメリカ', 'オセアニア'];
+      d.groupKeys = ['asia', 'europe', 'north', 'africa', 'south', 'oceania'];
+      d.groups = d.groupKeys.map(function (k) { return conts[k] || 0; });
+      d.flags = ids.map(function (id) { return (N.flagFor && N.flagFor(id)) || ''; }).filter(Boolean);
+      // いちばん多く行った国
+      var top = null;
+      Object.keys(by).forEach(function (id) { if (!top || by[id].length > by[id === top ? id : top].length) top = id; });
+      d.top = top ? by[top].length : 0;
+      d.topName = top && N.displayName ? N.displayName(top, '') : '';
+      // 年ごと（新しい順・最大5年）
+      var yr = {};
+      vs.filter(been).forEach(function (v) {
+        var y = (v.date || '').slice(0, 4); if (!y) return;
+        (yr[y] = yr[y] || []).push((N.flagFor && N.flagFor(v.countryId)) || '');
+      });
+      d.years = Object.keys(yr).sort().reverse().slice(0, 5).map(function (y) {
+        var seen = {}, out = [];
+        yr[y].forEach(function (f) { if (f && !seen[f]) { seen[f] = 1; out.push(f); } });
+        return [y, out];
+      });
+      // バッジの数え方は、アプリ本体（currentBadges）とまったく同じにする
+      var list = [];
+      if (B) {
+        var bs = B.statsOf(vs, function (v) { return String(v.countryId); }, been);
+        var byCont = { asia: 0, europe: 0, africa: 0, north: 0, south: 0, oceania: 0 };
+        var cset = new Set(), south = false;
+        var ISO = (window.worldNameAPI || {}).iso2 || {};
+        bs.keys.forEach(function (id) {
+          var c = L && L.continentOfCountry(id);
+          if (c) { cset.add(c); byCont[c]++; }
+          var code = ISO[String(id).replace(/^0+/, '') || '0'];
+          if (code && B.SOUTH.indexOf(code) >= 0) south = true;
+        });
+        bs.byCont = byCont;
+        list = B.worldBadges(bs, cset, south);
+      }
+      d.badgeList = list.map(function (b) { return b.emo; });
+      d.badgeGot = list.filter(function (b) { return b.got; }).map(function (b) { return b.emo; });
+      d.badges = d.badgeGot.length; d.badgeAll = list.length || 21;
+      var info = L ? L.levelInfo(ids.length, L.LV_W_NEED, L.names().w, Object.keys(conts).length >= 6, Object.keys(conts).length) : { lv: 1, name: '', pct: 0, rest: 0 };
+      d.lv = info.lv; d.lvName = info.name; d.lvPct = info.pct;
+      d.rest = info.top ? (en ? 'You made it' : 'ここまで来ました')
+             : info.waitCont ? (en ? info.rest + ' more continent' + (info.rest === 1 ? '' : 's') : 'あと ' + info.rest + '大陸')
+             : (en ? info.rest + ' more to level up' : 'つぎまで あと ' + info.rest + 'か国');
+      d.photos = [];
+      vs.forEach(function (v) { (v.photos || []).forEach(function (p) { d.photos.push(p); }); });
+    } else {
+      var jp = readStore('your-travels-japan-v1'), jv = jp.visits || [];
+      var NAMES = window.JP_NAMES || window.japanNames || {};
+      var nameOf = function (code) {
+        var v = NAMES[code];
+        return (typeof v === 'string' ? v : (v && (v.name || v[0]))) || code;
+      };
+      var byP = {};
+      jv.forEach(function (v) { if (v.prefCode) (byP[v.prefCode] = byP[v.prefCode] || []).push(v); });
+      var prefs = Object.keys(byP).filter(function (p) { return byP[p].some(been); }).sort();
+      var muni = {};
+      jv.filter(been).forEach(function (v) {
+        (v.cityCodes && v.cityCodes.length ? v.cityCodes : (v.cityCode ? [v.cityCode] : [])).forEach(function (c) { muni[c] = 1; });
+      });
+      d.n = prefs.length; d.of = 47;
+      d.sub = Object.keys(muni).length;
+      d.trips = jv.length;
+      d.nameN = en ? 'prefectures' : '都道府県'; d.nameSub = en ? 'cities' : '市区町村';
+      d.unit = en ? '' : '県'; d.groupName = en ? 'regions' : '地方';
+      d.groupLabels = (A && A.areas) ? A.areas.map(function (a) { return a.name || a.ja || ''; })
+        : ['北海道', '東北', '関東', '中部', '近畿', '中国', '四国', '九州', '沖縄'];
+      d.groups = d.groupLabels.map(function (_, i) {
+        var a = A && A.areas && A.areas[i];
+        if (!a) return 0;
+        return prefs.filter(function (p) { var n = parseInt(p, 10); return n >= a.from && n <= a.to; }).length;
+      });
+      d.flags = prefs.map(nameOf);
+      d.prefCodes = prefs;
+      var topP = null;
+      Object.keys(byP).forEach(function (p) { if (!topP || byP[p].length > byP[topP].length) topP = p; });
+      d.top = topP ? byP[topP].length : 0;
+      d.topName = topP ? nameOf(topP) : '';
+      var yrj = {};
+      jv.filter(been).forEach(function (v) {
+        var y = (v.date || '').slice(0, 4); if (!y || !v.prefCode) return;
+        (yrj[y] = yrj[y] || []).push(nameOf(v.prefCode));
+      });
+      d.years = Object.keys(yrj).sort().reverse().slice(0, 5).map(function (y) {
+        var seen = {}, out = [];
+        yrj[y].forEach(function (p) { if (!seen[p]) { seen[p] = 1; out.push(p); } });
+        return [y, out];
+      });
+      var jl = window.japanBadgeList ? window.japanBadgeList() : [];
+      d.badgeList = jl.map(function (b) { return b.emo; });
+      d.badgeGot = jl.filter(function (b) { return b.got; }).map(function (b) { return b.emo; });
+      d.badges = d.badgeGot.length; d.badgeAll = jl.length || 24;
+      var ij = L ? L.levelInfo(prefs.length, L.LV_JP_NEED, L.names().jp, false) : { lv: 1, name: '', pct: 0, rest: 0 };
+      d.lv = ij.lv; d.lvName = ij.name; d.lvPct = ij.pct;
+      d.rest = ij.top ? (en ? 'You made it' : 'ここまで来ました')
+             : (en ? ij.rest + ' more to level up' : 'つぎまで あと ' + ij.rest + '県');
+      d.photos = [];
+      jv.forEach(function (v) { (v.photos || []).forEach(function (p) { d.photos.push(p); }); });
+    }
+    d.pct = Math.round(d.n / d.of * 100);
+    d.gSeen = d.groups.filter(function (x) { return x > 0; }).length;
+    d.gAll = d.groups.length;
+    return d;
+  }
+
+  // 漢数字（999まで。縦書き・旅券・はんこで使う）
+  var K1 = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  function kanji(n) {
+    n = Math.floor(n);
+    if (n < 0 || n > 999) return String(n);
+    if (n < 10) return K1[n];
+    var h = Math.floor(n / 100), t = Math.floor(n / 10) % 10, o = n % 10, r = '';
+    if (h) r += (h > 1 ? K1[h] : '') + '百';
+    if (t) r += (t > 1 ? K1[t] : '') + '十';
+    if (o) r += K1[o];
+    return r;
+  }
+
+  // ── デザイン ──────────────────────────────────────────
+  //   side : 'both' | 'world' | 'japan'
+  //   ok(d): この記録で成り立つか（成り立たないものは出さない）
+  function fill(g, col) { g.fillStyle = col; g.fillRect(0, 0, W, H); }
+
+  function passport(g, d, col) {
+    fill(g, col);
+    var pad = 70, fx = pad + 36, fy = pad + 36, fw = W - (pad + 36) * 2, fh = H - (pad + 36) * 2;
+    g.strokeStyle = 'rgba(214,185,123,0.55)'; g.lineWidth = 3;
+    g.strokeRect(fx, fy, fw, fh);
+    g.strokeRect(fx + 8, fy + 8, fw - 16, fh - 16);
+    text(g, 'YOUR TRAVELS', W / 2, fy + 110, { size: 28, color: 'rgba(255,255,255,0.6)', ls: 11, align: 'center', font: SANS });
+    // 丸い印
+    var cy = H / 2 - 180, r = 115;
+    g.beginPath(); g.arc(W / 2, cy, r, 0, Math.PI * 2);
+    g.strokeStyle = 'rgba(214,185,123,0.7)'; g.lineWidth = 4; g.stroke();
+    g.beginPath(); g.arc(W / 2, cy, r - 10, 0, Math.PI * 2); g.lineWidth = 2; g.stroke();
+    text(g, T(d, kanji(d.n), String(d.n)), W / 2, cy - 4, { size: 54, weight: 500, color: C.goldInk, align: 'center', font: MIN, ls: 2 });
+    text(g, T(d, 'か国', 'countries'), W / 2, cy + 54, { size: T(d, 54, 32), weight: 500, color: C.goldInk, align: 'center', font: MIN, ls: 2 });
+    text(g, T(d, '旅の記録', 'TRAVEL RECORD'), W / 2, cy + 230, { size: T(d, 66, 48), weight: 500, color: C.goldInk, align: 'center', font: T(d, MIN, SANS), ls: 12 });
+    text(g, String(d.year), W / 2, cy + 300, { size: 26, color: 'rgba(255,255,255,0.58)', align: 'center', ls: 3, font: SANS });
+    g.fillStyle = 'rgba(214,185,123,0.6)'; g.fillRect(W / 2 - 70, H - 480, 140, 1.5);
+    text(g, T(d, d.sub + d.nameSub + '　' + d.gSeen + d.groupName, d.sub + ' ' + d.nameSub + ' · ' + d.gSeen + ' ' + d.groupName), W / 2, H - 400,
+      { size: 26, color: 'rgba(255,255,255,0.58)', align: 'center', ls: 3, font: SANS });
+    text(g, 'Lv.' + d.lv + '　' + d.lvName, W / 2, H - 348,
+      { size: 26, color: 'rgba(255,255,255,0.58)', align: 'center', ls: 3, font: SANS });
+  }
+
+  var CARDS = [
+    { no: '1', name: '大きな数字', nameEn: 'Big number', side: 'both', ok: function () { return true; },
+      draw: function (g, d) {
+        fill(g, C.bg);
+        brand(g, 220, C.muted, 'center');
+        var cap = T(d, d.side === 'world' ? 'か国に行きました' : 'の都道府県に行きました',
+                       d.side === 'world' ? 'countries visited' : 'prefectures visited');
+        text(g, String(d.n), W / 2, H / 2 - 60, { size: 300, weight: 200, color: C.v4, align: 'center', ls: -14, font: SANS });
+        text(g, cap, W / 2, H / 2 + 90, { size: 46, weight: 500, align: 'center', font: MIN, ls: 2 });
+        nums(g, [[d.sub, '', d.nameSub], [d.gSeen, '/' + d.gAll, d.groupName], [d.trips, '', T(d, 'のべ回数', 'trips')]], H - 480);
+        text(g, 'Lv.' + d.lv + '　' + d.lvName, W / 2, H - 230, { size: 26, color: C.muted, align: 'center', ls: 3, font: SANS });
+      } },
+
+    { no: '3', name: 'レベル', nameEn: 'Level', side: 'both', ok: function (d) { return d.n >= 1; },
+      draw: function (g, d) {
+        fill(g, C.ink);
+        var pw = 'rgba(255,255,255,0.55)';
+        brand(g, 240, pw);
+        var y = 620;
+        var wm = measure(g, 'Lv.', { size: 38, font: SANS });
+        text(g, 'Lv.', 96, y, { size: 38, color: pw, ls: 3, font: SANS });
+        var wn = measure(g, String(d.lv), { size: 210, weight: 200, ls: -8, font: SANS });
+        text(g, String(d.lv), 96 + wm + 28, y, { size: 210, weight: 200, color: '#fff', ls: -8, font: SANS });
+        text(g, '/ 10', 96 + wm + 28 + wn + 24, y, { size: 38, color: 'rgba(255,255,255,0.5)', font: SANS });
+        text(g, d.lvName, 96, y + 100, { size: 54, weight: 500, color: C.paper, font: MIN, ls: 3 });
+        bar(g, 96, y + 150, W - 192, 14, d.lvPct, 'rgba(255,255,255,0.22)', '#fff');
+        text(g, d.rest, 96, y + 216, { size: 26, color: pw, ls: 3, font: SANS });
+        nums(g, [[d.n, '/' + d.of, d.nameN], [d.sub, '', d.nameSub], [d.gSeen, '/' + d.gAll, d.groupName]],
+          H - 600, { numCol: '#fff', smallCol: 'rgba(255,255,255,0.5)', labCol: pw, lineCol: 'rgba(255,255,255,0.25)' });
+        var n = Math.min(5, d.badgeGot.length);
+        for (var i = 0; i < n; i++) badge(g, 96 + 56 + i * 130, H - 330, 56, d.badgeGot[i], true);
+        text(g, T(d, 'バッジ ', 'Badges ') + d.badges + ' / ' + d.badgeAll, 96, H - 200, { size: 26, color: pw, ls: 3, font: SANS });
+      } },
+
+    { no: '4', name: '旅券（えんじ）', nameEn: 'Passport (crimson)', side: 'world', ok: function (d) { return d.n >= 1; },
+      draw: function (g, d) { passport(g, d, C.ppRed); } },
+
+    { no: '4b', name: '旅券（紺）', nameEn: 'Passport (navy)', side: 'world', ok: function (d) { return d.n >= 1; },
+      draw: function (g, d) { passport(g, d, C.ppNavy); } },
+
+    { no: '6', name: '年ごとの旅', nameEn: 'By year', side: 'both', ok: function (d) { return d.years.length >= 2; },
+      draw: function (g, d) {
+        fill(g, C.bg);
+        brand(g, 220);
+        text(g, T(d, 'これまでの旅', 'Trips so far'), 96, 275, { size: 30, color: C.sub, font: MIN, ls: 2 });
+        var y = 460, world = d.side === 'world';
+        d.years.forEach(function (row) {
+          rule(g, 96, y, W - 192, C.line);
+          text(g, row[0], 96, y + 56, { size: 44, weight: 300, color: C.v4, ls: 1, font: SANS });
+          var cap = world ? 10 : 7, x = 246;
+          row[1].slice(0, cap).forEach(function (f) {
+            if (world) { emoji(g, f, x + 22, y + 44, 44); x += 54; }
+            else { text(g, f, x, y + 56, { size: 30, font: MIN }); x += measure(g, f, { size: 30, font: MIN }) + 18; }
+          });
+          if (row[1].length > cap) text(g, '＋' + (row[1].length - cap), x + 6, y + 56, { size: 26, color: C.muted, font: SANS });
+          y += 90;
+        });
+        rule(g, 96, H - 560, W - 192);
+        nums(g, [[d.n, '/' + d.of, d.nameN], [d.sub, '', d.nameSub], [d.trips, '', T(d, 'のべ回数', 'trips')]], H - 400);
+      } },
+
+    { no: '10', name: '縦書き（和）', nameEn: 'Vertical (Japanese)', side: 'japan',
+      ok: function (d) { return d.n >= 1 && !d.en; },   // 縦書きは日本語の組み方なので英語では出さない
+      draw: function (g, d) {
+        fill(g, C.paper);
+        // 縦書きは、字を1つずつ縦にならべて描く
+        var vline = function (s, x, top, o) {
+          o = o || {}; var sz = o.size || 86, gap = o.gap || sz + (o.ls || 14), yy = top;
+          for (var i = 0; i < s.length; i++) { text(g, s[i], x, yy, { size: sz, weight: o.weight || 500, color: o.color || C.text, font: MIN, align: 'center' }); yy += gap; }
+          return yy;
+        };
+        vline(kanji(d.n) + 'の県', W - 200, 300);
+        vline(kanji(d.sub) + 'の町', W - 320, 300);
+        vline('これまでに訪れた場所', W - 470, 300, { size: 32, color: C.muted, ls: 8, weight: 400 });
+        var n = Math.min(3, d.badgeGot.length);
+        for (var i = 0; i < n; i++) badge(g, 230, H - 700 + i * 150, 56, d.badgeGot[i], true);
+        g.fillStyle = C.line2; g.fillRect(150, H - 300, 300, 1.5);
+        text(g, 'Lv.' + d.lv, 150, H - 230, { size: 32, color: C.muted, ls: 4, font: SANS });
+        text(g, d.lvName, 150, H - 170, { size: 32, color: C.muted, ls: 4, font: MIN });
+      } },
+
+    { no: '11', name: '文字だけ', nameEn: 'Words only', side: 'both', ok: function () { return true; },
+      draw: function (g, d) {
+        fill(g, C.bg);
+        brand(g, 300);
+        var ttl = d.n === 0
+          ? T(d, 'まだ\nどこにも\n行っていません', 'Nowhere\nyet')
+          : T(d, (d.side === 'world' ? '世界の\n' + d.n + 'か国に\n行きました' : d.n + 'つの\n都道府県に\n行きました'),
+               (d.side === 'world' ? d.n + '\ncountries\nvisited' : d.n + '\nprefectures\nvisited'));
+        para(g, ttl, 110, 760, { size: 72, weight: 500, lh: 116, maxW: W - 220, font: MIN, ls: 6 });
+        g.fillStyle = C.line2; g.fillRect(110, H - 700, 160, 1.5);
+        var body = d.n === 0
+          ? T(d, 'これから記録していきます\nはじめの一歩は、どこへ', 'The record starts here.\nWhere to first?')
+          : T(d, d.sub + 'の' + d.nameSub + 'をあるき\n' + d.gSeen + 'つの' + d.groupName + 'に立ちました\nいまはレベル' + d.lv + '、' + d.lvName,
+               d.sub + ' ' + d.nameSub + ' walked\n' + d.gSeen + ' ' + d.groupName + ' stood on\nNow level ' + d.lv + ', ' + d.lvName);
+        para(g, body, 110, H - 600, { size: 34, color: C.sub, lh: 75, maxW: W - 220, font: MIN, ls: 4 });
+        text(g, String(d.year), 110, H - 230, { size: 26, color: C.muted, ls: 3, font: SANS });
+      } },
+
+    { no: '21', name: '写真を1枚', nameEn: 'With a photo', side: 'both', ok: function (d) { return d.photos.length >= 1 && d.n >= 1; },
+      draw: function (g, d) {
+        fill(g, C.bg);
+        var ih = H - 560;
+        if (d.img) {
+          var s = Math.max(W / d.img.width, ih / d.img.height);
+          var iw = d.img.width * s, ihh = d.img.height * s;
+          g.save(); g.beginPath(); g.rect(0, 0, W, ih); g.clip();
+          g.drawImage(d.img, (W - iw) / 2, (ih - ihh) / 2, iw, ihh); g.restore();
+        } else { g.fillStyle = C.land; g.fillRect(0, 0, W, ih); }
+        brand(g, ih + 110);
+        text(g, T(d, d.n + d.unit + '・' + d.sub + d.nameSub, d.n + ' ' + d.nameN + ' · ' + d.sub + ' ' + d.nameSub),
+          96, ih + 190, { size: 46, weight: 500, font: MIN, ls: 2 });
+        nums(g, [[d.gSeen, '/' + d.gAll, d.groupName], [d.trips, '', T(d, 'のべ回数', 'trips')], [d.badges, '/' + d.badgeAll, T(d, 'バッジ', 'badges')]], H - 150);
+      } },
+
+    { no: '22', name: 'はんこ（和）', nameEn: 'Seal (Japanese)', side: 'japan',
+      ok: function (d) { return d.n >= 1 && !d.en; },   // はんこの字も日本語の組み方なので英語では出さない
+      draw: function (g, d) {
+        fill(g, C.paper);
+        brand(g, 220, C.muted, 'center');
+        text(g, kanji(d.n) + 'の県', W / 2, 700, { size: 76, weight: 500, align: 'center', font: MIN, ls: 10 });
+        text(g, kanji(d.sub) + 'の町', W / 2, 820, { size: 76, weight: 500, align: 'center', font: MIN, ls: 10 });
+        // はんこ（少しかたむける）
+        g.save(); g.translate(W / 2, 1150); g.rotate(-6 * Math.PI / 180);
+        g.strokeStyle = C.v4; g.lineWidth = 8; rr(g, -150, -150, 300, 300, 18); g.stroke();
+        text(g, '踏破', 0, -14, { size: 72, weight: 600, color: C.v4, align: 'center', font: MIN, ls: 2 });
+        text(g, d.pct + '%', 0, 80, { size: 72, weight: 600, color: C.v4, align: 'center', font: MIN, ls: 2 });
+        g.restore();
+        g.fillStyle = C.line2; g.fillRect(W / 2 - 80, H - 420, 160, 1.5);
+        text(g, '日本 Lv.' + d.lv + '　' + d.lvName, W / 2, H - 330, { size: 26, color: C.muted, align: 'center', ls: 4, font: MIN });
+        text(g, 'バッジ ' + d.badges + ' / ' + d.badgeAll, W / 2, H - 270, { size: 26, color: C.muted, align: 'center', ls: 4, font: SANS });
+        // ⑩⑩縦書き・㉒はんこは日本語の組み方そのものなので、英語では出さない（下の ok で外す）
+      } },
+
+    { no: '24', name: 'ステッカー貼り', nameEn: 'Stickers', side: 'both', ok: function (d) { return d.badges >= 3; },
+      draw: function (g, d) {
+        fill(g, C.bg);
+        brand(g, 200, C.muted, 'center');
+        text(g, T(d, 'あつめたバッジ ', 'Badges ') + d.badges + ' / ' + d.badgeAll, W / 2, 260, { size: 30, color: C.sub, align: 'center', font: MIN, ls: 2 });
+        var POS = [[350, 120, -11], [390, 380, 7], [340, 690, -5], [560, 240, 9], [590, 530, -8], [540, 810, 13],
+                   [770, 130, 6], [800, 420, -13], [760, 730, 4], [990, 270, -6], [1020, 570, 11], [980, 830, -9],
+                   [1210, 150, 8], [1230, 450, -4], [1200, 760, 12]];
+        var n = Math.min(d.badgeGot.length, POS.length);
+        for (var i = 0; i < n; i++) {
+          g.save(); g.translate(POS[i][1], POS[i][0]); g.rotate(POS[i][2] * Math.PI / 180);
+          badge(g, 0, 0, 85, d.badgeGot[i], true); g.restore();
+        }
+        nums(g, [[d.n, '/' + d.of, d.nameN], [d.sub, '', d.nameSub], [d.gSeen, '/' + d.gAll, d.groupName]], H - 380, { pad: 80 });
+        text(g, 'Lv.' + d.lv + '　' + d.lvName, W / 2, H - 200, { size: 26, color: C.muted, align: 'center', ls: 3, font: SANS });
+      } }
+  ];
+
+  // ── 友達に教えるカード（い案：旅券の裏表紙ふう）──────────────
+  function drawInvite(g, qrImg) {
+    fill(g, C.ppRed);
+    var pad = 70, fx = pad + 36, fy = pad + 36, fw = W - (pad + 36) * 2, fh = H - (pad + 36) * 2;
+    g.strokeStyle = 'rgba(214,185,123,0.55)'; g.lineWidth = 3;
+    g.strokeRect(fx, fy, fw, fh);
+    g.strokeRect(fx + 8, fy + 8, fw - 16, fh - 16);
+    text(g, 'YOUR TRAVELS', W / 2, fy + 120, { size: 28, color: 'rgba(255,255,255,0.6)', ls: 11, align: 'center', font: SANS });
+    var e = isEnLang();
+    text(g, e ? 'I keep a record' : '旅の記録を', W / 2, 560, { size: 52, weight: 500, color: C.goldInk, align: 'center', font: e ? SANS : MIN, ls: 8 });
+    text(g, e ? 'of my travels' : 'つけています', W / 2, 640, { size: 52, weight: 500, color: C.goldInk, align: 'center', font: e ? SANS : MIN, ls: 8 });
+    text(g, e ? 'Colour in the places you have been' : '行った場所を地図に塗る', W / 2, 760, { size: 28, color: 'rgba(255,255,255,0.72)', align: 'center', ls: 2, font: e ? SANS : MIN });
+    text(g, e ? 'Packing lists that fit the trip' : '持ち物リストも作れる', W / 2, 816, { size: 28, color: 'rgba(255,255,255,0.72)', align: 'center', ls: 2, font: e ? SANS : MIN });
+    var qs = 300, qx = (W - qs) / 2, qy = 1080;
+    g.fillStyle = 'rgba(255,255,255,0.94)'; rr(g, qx - 18, qy - 18, qs + 36, qs + 36, 20); g.fill();
+    if (qrImg) g.drawImage(qrImg, qx, qy, qs, qs);
+    text(g, SHARE_URL.replace(/^https?:\/\//, ''), W / 2, qy + qs + 90,
+      { size: 26, color: 'rgba(255,255,255,0.72)', align: 'center', ls: 1, font: SANS });
+  }
+  var SHARE_URL = 'https://enu-tools.pages.dev/travel/yourtravels/';
+
+  // ── 1枚ぶんを描く ───────────────────────────────────
+  var fontsReady = null;
+  function waitFonts() {
+    if (fontsReady) return fontsReady;
+    fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    return fontsReady;
+  }
+  function makeCanvas() {
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    return c;
+  }
+  function render(card, d) {
+    var c = makeCanvas(), g = c.getContext('2d');
+    g.textBaseline = 'alphabetic';
+    card.draw(g, d);
+    return c;
+  }
+
+  // 写真を1枚読み込んでおく（㉑のため）
+  function loadPhoto(d) {
+    if (!d.photos.length || !window.photoDB) return Promise.resolve();
+    return window.photoDB.get(d.photos[0]).then(function (blob) {
+      if (!blob) return;
+      return new Promise(function (res) {
+        var url = URL.createObjectURL(blob), im = new Image();
+        im.onload = function () { d.img = im; URL.revokeObjectURL(url); res(); };
+        im.onerror = function () { URL.revokeObjectURL(url); res(); };
+        im.src = url;
+      });
+    }).catch(function () {});
+  }
+  // QRコードを絵にしておく（紹介カードのため）
+  function loadQR() {
+    return new Promise(function (res) {
+      if (typeof QRCode === 'undefined') return res(null);
+      try {
+        var box = document.createElement('div');
+        box.style.cssText = 'position:absolute;left:-9999px;top:0';
+        document.body.appendChild(box);
+        new QRCode(box, { text: SHARE_URL, width: 300, height: 300, colorDark: '#5A4738', colorLight: '#ffffff' });
+        setTimeout(function () {
+          var el = box.querySelector('canvas') || box.querySelector('img');
+          if (el && el.tagName === 'IMG' && !el.complete) { el.onload = function () { res(el); }; return; }
+          res(el);
+        }, 60);
+      } catch (e) { res(null); }
+    });
+  }
+
+  // ── ポップアップ ───────────────────────────────────
+  var LAST_KEY = 'wanderlog-card-pick';
+  var side = 'world', list = [], at = 0, data = null, qrImg = null, invite = false;
+
+  function el(id) { return document.getElementById(id); }
+  function lastPick() { try { return JSON.parse(localStorage.getItem(LAST_KEY) || '{}'); } catch (e) { return {}; } }
+  function savePick() {
+    try { var o = lastPick(); o[side] = list[at] && list[at].no; localStorage.setItem(LAST_KEY, JSON.stringify(o)); } catch (e) {}
+  }
+
+  function show() {
+    var wrap = el('card-stage');
+    wrap.innerHTML = '';
+    var c = invite ? (function () { var cc = makeCanvas(); drawInvite(cc.getContext('2d'), qrImg); return cc; })()
+                   : render(list[at], data);
+    c.className = 'card-canvas';
+    wrap.appendChild(c);
+    el('card-dots').innerHTML = invite ? '' : list.map(function (_, i) {
+      return '<i class="' + (i === at ? 'on' : '') + '"></i>'; }).join('');
+    el('card-now').textContent = invite ? (isEnLang() ? 'Card to share the app' : 'アプリを教えるカード')
+      : (list[at] ? (isEnLang() ? (list[at].nameEn || list[at].name) : list[at].name) : '');
+    el('card-nav').hidden = invite || list.length < 2;
+    el('card-invite-row').hidden = invite;
+    el('card-back-row').hidden = !invite;
+    if (!invite) savePick();
+  }
+
+  function open(which) {
+    side = which;
+    data = collect(which);
+    invite = false;
+    list = CARDS.filter(function (c) { return (c.side === 'both' || c.side === which) && c.ok(data); });
+    var want = lastPick()[which];
+    at = Math.max(0, list.findIndex(function (c) { return c.no === want; }));
+    el('card-modal').classList.add('show');
+    el('card-where').textContent = which === 'world' ? (isEnLang() ? 'WORLD' : 'せかい') : (isEnLang() ? 'JAPAN' : 'にほん');
+    el('card-stage').innerHTML = '';
+    waitFonts()
+      .then(function () { return loadPhoto(data); })
+      .then(function () { return qrImg ? null : loadQR().then(function (q) { qrImg = q; }); })
+      .then(function () {
+        list = CARDS.filter(function (c) { return (c.side === 'both' || c.side === which) && c.ok(data); });
+        if (at >= list.length) at = 0;
+        show();
+      });
+  }
+  function isEnLang() { try { return window.currentLangIsEn && window.currentLangIsEn(); } catch (e) { return false; } }
+  function close() { el('card-modal').classList.remove('show'); }
+
+  function currentCanvas() { return el('card-stage').querySelector('canvas'); }
+  function fileName() {
+    var p = invite ? 'your-travels' : 'your-travels-' + side;
+    return p + '-' + new Date().toISOString().slice(0, 10) + '.png';
+  }
+  function toBlob(c) {
+    return new Promise(function (res) { c.toBlob(function (b) { res(b); }, 'image/png'); });
+  }
+  function toast(msg) {
+    var t = el('card-toast');
+    t.innerHTML = '<span>' + msg + '</span>';
+    t.hidden = false;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+  function save() {
+    var c = currentCanvas(); if (!c) return;
+    toBlob(c).then(function (b) {
+      var url = URL.createObjectURL(b), a = document.createElement('a');
+      a.href = url; a.download = fileName();
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      toast(isEnLang() ? 'Image saved' : '画像を保存しました');
+    });
+  }
+  function share() {
+    var c = currentCanvas(); if (!c) return;
+    toBlob(c).then(function (b) {
+      var f = new File([b], fileName(), { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        navigator.share({ files: [f] }).catch(function () {});
+      } else { save(); }
+    });
+  }
+
+  // ── 画面を組み立てる ────────────────────────────────
+  function build() {
+    if (el('card-modal')) return;
+    var en = isEnLang();
+    var html =
+      '<div class="popup-card list-modal-inner card-inner" role="dialog" aria-modal="true">' +
+        '<button type="button" class="form-back" id="card-back"><span aria-hidden="true">‹</span> <span>' + (en ? 'Back' : 'もどる') + '</span></button>' +
+        '<div class="form-modal-header"><div>' +
+          '<div class="form-modal-label" id="card-where"></div>' +
+          '<h3 class="form-modal-country" id="card-title">' + (en ? 'Make an image' : '画像を作る') + '</h3>' +
+        '</div></div>' +
+        '<div class="card-stage" id="card-stage"></div>' +
+        '<div class="card-nav" id="card-nav">' +
+          '<button type="button" id="card-prev" aria-label="' + (en ? 'Previous' : '前へ') + '">‹</button>' +
+          '<span class="card-now" id="card-now"></span>' +
+          '<button type="button" id="card-next" aria-label="' + (en ? 'Next' : '次へ') + '">›</button>' +
+        '</div>' +
+        '<div class="card-dots" id="card-dots"></div>' +
+        '<div class="card-btns">' +
+          '<button type="button" class="card-btn line" id="card-save"><span>' + (en ? 'Save image' : '画像を保存') + '</span><small>1080 × 1920</small></button>' +
+          '<button type="button" class="card-btn fill" id="card-share">' + (en ? 'Share image' : '画像を共有') + '</button>' +
+        '</div>' +
+        '<div class="card-toast" id="card-toast" hidden></div>' +
+        '<div class="card-foot" id="card-invite-row">' +
+          '<button type="button" class="foot-link" id="card-invite">' + (en ? 'Share this app' : 'このアプリを教える') + '</button>' +
+        '</div>' +
+        '<div class="card-foot" id="card-back-row" hidden>' +
+          '<button type="button" class="foot-link" id="card-tocards">' + (en ? 'Back to my cards' : '自分の記録のカードへ') + '</button>' +
+        '</div>' +
+      '</div>';
+    var wrap = document.createElement('div');
+    wrap.className = 'popup-backdrop list-modal card-modal';
+    wrap.id = 'card-modal';
+    wrap.innerHTML = html;
+    document.body.appendChild(wrap);
+
+    el('card-back').addEventListener('click', close);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+    el('card-prev').addEventListener('click', function () { at = (at - 1 + list.length) % list.length; show(); });
+    el('card-next').addEventListener('click', function () { at = (at + 1) % list.length; show(); });
+    el('card-save').addEventListener('click', save);
+    el('card-share').addEventListener('click', share);
+    el('card-invite').addEventListener('click', function () { invite = true; show(); });
+    el('card-tocards').addEventListener('click', function () { invite = false; show(); });
+    // 指で横にはらっても変わる
+    var sx = null;
+    var st = el('card-stage');
+    st.addEventListener('pointerdown', function (e) { sx = e.clientX; });
+    st.addEventListener('pointerup', function (e) {
+      if (sx == null || invite || list.length < 2) return;
+      var dx = e.clientX - sx; sx = null;
+      if (Math.abs(dx) > 40) { at = (at + (dx < 0 ? 1 : list.length - 1)) % list.length; show(); }
+    });
+  }
+
+  window.openShareCard = function (which) { build(); open(which || 'world'); };
+})();
+</script>
+
 <script>
 // オフラインでも開けるようにする（サーバー越しに開いたときだけ）
 (function () {
